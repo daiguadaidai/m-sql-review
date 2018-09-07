@@ -1,5 +1,5 @@
 hash: 03191f91baf05915362b642c00f7ad732d9bb8f896d699bbe6c25d6a10bc3272
-updated: 2018-09-06T18:06:31.141752281+08:00
+updated: 2018-09-07T22:47:10.706392896+08:00
 imports:
 - name: github.com/beorn7/perks
   version: 3a771d992973f24aa725d07868b467d1ddfceafb
@@ -61,6 +61,8 @@ imports:
   - util/metautils
 - name: github.com/grpc-ecosystem/go-grpc-prometheus
   version: c225b8c3b01faf2899099b768856a9e916e5087b
+- name: github.com/inconshreveable/mousetrap
+  version: 76626ae9c91c4f2a10f34cad8ce83ea42c93bb75
 - name: github.com/juju/errors
   version: 22422dad46e14561a0854ad42497a75af9b61909
 - name: github.com/matttproud/golang_protobuf_extensions
@@ -142,6 +144,10 @@ imports:
   version: 3e01752db0189b9157070a0e1668a620f9a85da2
 - name: github.com/spaolacci/murmur3
   version: 9f5d223c60793748f04a9d5b4b4eacddfc1f755d
+- name: github.com/spf13/cobra
+  version: ef82de70bb3f60c65fb8eebacbb2d122ef517385
+- name: github.com/spf13/pflag
+  version: 298182f68c66c05229eb03ac171abe6e309ee79a
 - name: github.com/twinj/uuid
   version: 835a10bbd6bce40820349a68b1368a62c3c5617c
 - name: github.com/uber/jaeger-client-go
