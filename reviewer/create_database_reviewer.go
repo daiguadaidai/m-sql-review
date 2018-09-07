@@ -20,7 +20,7 @@ func (this *CreateDatabaseReviewer) Review() *ReviewMSG {
 	}
 
 	// 检测命名规则
-	reviewMSG = this.DetectDBName()
+	reviewMSG = this.DetectDBNameReg()
 	if reviewMSG != nil {
 		return reviewMSG
 	}
@@ -45,7 +45,7 @@ func (this *CreateDatabaseReviewer) DetectDBNameLength() *ReviewMSG {
 }
 
 // 检测数据库命名规范
-func (this *CreateDatabaseReviewer) DetectDBName() *ReviewMSG {
+func (this *CreateDatabaseReviewer) DetectDBNameReg() *ReviewMSG {
 	return DetectNameReg(this.StmtNode.Name)
 }
 

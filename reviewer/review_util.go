@@ -14,9 +14,9 @@ func DetectNameLength(_name string) *ReviewMSG {
 		return &ReviewMSG{
 			Code: REVIEW_CODE_ERROR,
 			MSG: fmt.Sprintf(
-				"名称: %v, 检测失败. %v",
-				_name,
+				"检测失败: %v. 名称: %v",
 				fmt.Sprintf(MSG_NAME_LENGTH_ERROR, RULE_NAME_LENGTH),
+				_name,
 			),
 		}
 	}
@@ -34,7 +34,7 @@ func DetectNameReg(_name string) *ReviewMSG {
 	if err != nil || !match {
 		return &ReviewMSG{
 			Code: REVIEW_CODE_ERROR,
-			MSG: fmt.Sprintf("名称: %v, 检测失败. %v", _name, MSG_NAME_REG_ERROR),
+			MSG: fmt.Sprintf("检测失败. %v. 名称: %v, ", MSG_NAME_REG_ERROR, _name),
 		}
 	}
 
