@@ -9,4 +9,12 @@ const (
 	RULE_CHARSET = "utf8,utf8mb4"
 	// 通用 COLLATE
 	RULE_COLLATE = "utf8_general_ci,utf8mb4_general_ci"
+	// 是否允许删除数据库
+	RULE_ALLOW_DROP_DATABASE = false
+	// 是否允许删除表
+	RULE_ALLOW_DROP_TABLE = false
+	// 是否允许 rename table
+	RULE_ALLOW_RENAME_TABLE = false
+    // 是否允许 truncate table
+    RULE_ALLOW_TRUNCATE_TABLE = false
 )

@@ -12,12 +12,14 @@ func NewReviewer(_stmtNode ast.Node) Reviewer {
 	case *ast.DropTableStmt:
 		return &DropTableReviewer{StmtNode: stmt}
 	case *ast.RenameTableStmt:
+		return &RenameTableReviewer{StmtNode: stmt}
 	case *ast.CreateViewStmt:
 	case *ast.CreateIndexStmt:
 	case *ast.DropIndexStmt:
 	case *ast.AlterTableStmt:
 		return &AlterTableReviewer{StmtNode: stmt}
 	case *ast.TruncateTableStmt:
+		return &TruncateTableReviewer{StmtNode: stmt}
 	case *ast.SelectStmt:
 	case *ast.UnionStmt:
 	case *ast.LoadDataStmt:

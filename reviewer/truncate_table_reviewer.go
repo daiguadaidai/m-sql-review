@@ -4,17 +4,17 @@ import (
 "github.com/daiguadaidai/m-sql-review/ast"
 )
 
-type DropDatabaseReviewer struct {
-	StmtNode *ast.DropDatabaseStmt
+type TruncateTableReviewer struct {
+	StmtNode *ast.TruncateTableStmt
 }
 
-func (this *DropDatabaseReviewer) Review() *ReviewMSG {
+func (this *TruncateTableReviewer) Review() *ReviewMSG {
 	var reviewMSG *ReviewMSG
 
-	if !RULE_ALLOW_DROP_DATABASE {
+	if !RULE_ALLOW_TRUNCATE_TABLE {
 		reviewMSG = new(ReviewMSG)
 		reviewMSG.Code = REVIEW_CODE_ERROR
-		reviewMSG.MSG = MSG_FORBIDEN_DROP_DATABASE_ERROR
+		reviewMSG.MSG = MSG_FORBIDEN_TRUNCATE_TABLE_ERROR
 	}
 
 	reviewMSG = new(ReviewMSG)

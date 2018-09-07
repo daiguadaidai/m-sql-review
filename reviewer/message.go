@@ -14,4 +14,8 @@ const (
 	MSG_FORBIDEN_DROP_DATABASE_ERROR = "禁止删除数据库"
 	// 禁止DROP TABLE操作
 	MSG_FORBIDEN_DROP_TABLE_ERROR = "禁止删除表"
+	// 禁止 truncate 表
+	MSG_FORBIDEN_TRUNCATE_TABLE_ERROR = "禁止 truncate 表操作"
+	// 禁止 rename 表
+	MSG_FORBIDEN_RENAME_TABLE_ERROR = "禁止 rename 表操作"
 )
