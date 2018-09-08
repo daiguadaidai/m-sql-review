@@ -4,10 +4,12 @@ import (
 	"github.com/daiguadaidai/m-sql-review/ast"
 	"strings"
 	"fmt"
+	"github.com/daiguadaidai/m-sql-review/config"
 )
 
 type CreateDatabaseReviewer struct {
 	StmtNode *ast.CreateDatabaseStmt
+	ReviewConfig *config.ReviewConfig
 }
 
 func (this *CreateDatabaseReviewer) Review() *ReviewMSG {
@@ -41,12 +43,12 @@ func (this *CreateDatabaseReviewer) Review() *ReviewMSG {
 
 // 检测数据库名长度
 func (this *CreateDatabaseReviewer) DetectDBNameLength() *ReviewMSG {
-	return DetectNameLength(this.StmtNode.Name)
+	return DetectNameLength(this.StmtNode.Name, this.ReviewConfig.RuleNameLength)
 }
 
 // 检测数据库命名规范
 func (this *CreateDatabaseReviewer) DetectDBNameReg() *ReviewMSG {
-	return DetectNameReg(this.StmtNode.Name)
+	return DetectNameReg(this.StmtNode.Name, this.ReviewConfig.RuleNameReg)
 }
 
 // 检测创建数据库其他选项值
@@ -77,7 +79,7 @@ Params:
 func (this *CreateDatabaseReviewer) DetectDBCharset(_charset string) *ReviewMSG {
 	var reviewMSG *ReviewMSG
 
-	allowCharsets := strings.Split(RULE_CHARSET, ",") // 获取允许的字符集数组
+	allowCharsets := strings.Split(this.ReviewConfig.RuleCharSet, ",") // 获取允许的字符集数组
 	isMatch := false
 	// 将需要检测的字符集 和 允许的字符集进行循环比较
 	for _, charset := range allowCharsets {
@@ -92,7 +94,7 @@ func (this *CreateDatabaseReviewer) DetectDBCharset(_charset string) *ReviewMSG 
 		reviewMSG.Code = REVIEW_CODE_ERROR
 		reviewMSG.MSG = fmt.Sprintf(
 			"字符类型检测失败: %v",
-			fmt.Sprintf(MSG_CHARSET_ERROR, RULE_CHARSET),
+			fmt.Sprintf(config.MSG_CHARSET_ERROR, this.ReviewConfig.RuleCharSet),
 		)
 	}
 
@@ -106,7 +108,7 @@ Params:
 func (this *CreateDatabaseReviewer) DetectDBCollate(_collate string) *ReviewMSG {
 	var reviewMSG *ReviewMSG
 
-	allowCollate := strings.Split(RULE_COLLATE, ",") // 获取允许的Collate数组
+	allowCollate := strings.Split(this.ReviewConfig.RuleCollate, ",") // 获取允许的Collate数组
 	isMatch := false
 	// 将需要检测的collate 和 允许的字符集进行循环比较
 	for _, collate := range allowCollate {
@@ -121,7 +123,7 @@ func (this *CreateDatabaseReviewer) DetectDBCollate(_collate string) *ReviewMSG 
 		reviewMSG.Code = REVIEW_CODE_ERROR
 		reviewMSG.MSG = fmt.Sprintf(
 			"Collate 类型检测失败: %v",
-			fmt.Sprintf(MSG_COLLATE_ERROR, RULE_COLLATE),
+			fmt.Sprintf(config.MSG_COLLATE_ERROR, this.ReviewConfig.RuleCollate),
 		)
 	}
 

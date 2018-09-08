@@ -1,4 +1,4 @@
-package reviewer
+package config
 
 const (
 	// 名称长度

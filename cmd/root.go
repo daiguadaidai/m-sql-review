@@ -19,23 +19,37 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
+	"github.com/daiguadaidai/m-sql-review/config"
+	"github.com/daiguadaidai/m-sql-review/service"
+	"github.com/outbrain/golib/log"
 )
 
-var cfgFile string
+var runConfig *config.ReviewConfig
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "m-sql-review",
-	Short: "A brief description of your application",
-	Long: `A longer description that spans multiple lines and likely contains
-examples and usage of using your application. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
-	// Uncomment the following line if your bare application
-	// has an action associated with it:
-	//	Run: func(cmd *cobra.Command, args []string) { },
+	Short: "SQL审核工具",
+	Long: `
+    一款SQL审核工具, 主要用于MySQL SQL 相关审核. 启动工具后会提供一个http接口为用户实时链接并且审核相关SQL.
+    启动工具:
+    ./m-sql-review \
+        --rule-name-length=100 \
+        --rule-name-reg="^[a-zA-Z\$_][a-zA-Z\$\d_]*$" \
+        --rule-charset="utf8,utf8mb4" \
+        --rule-collate="utf8_general_ci,utf8mb4_general_ci" \
+        --rule-allow-drop-database=false \
+        --rule-allow-drop-table=false \
+        --rule-allow-rename-table=false \
+        --rule-allow-truncate-table=false
+    `,
+	Run: func(cmd *cobra.Command, args []string) {
+		err := service.Run(runConfig)
+		if err != nil {
+			log.Errorf("运行失败: %v", err)
+		}
+		fmt.Println(runConfig)
+	},
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -48,7 +62,26 @@ func Execute() {
 }
 
 func init() {
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.m-sql-review.yaml)")
+	runConfig = new(config.ReviewConfig)
 
-	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	rootCmd.Flags().IntVar(&runConfig.RuleNameLength, "rule-name-length",
+		config.RULE_NAME_LENGTH,"通用名称长度")
+	rootCmd.Flags().StringVar(&runConfig.RuleNameReg, "rule-name-reg",
+		config.RULE_NAME_REG, "通用名称匹配规则")
+	rootCmd.Flags().StringVar(&runConfig.RuleCharSet, "rule-charset",
+		config.RULE_CHARSET,"通用允许的字符集, 默认(多个用逗号隔开)")
+	rootCmd.Flags().StringVar(&runConfig.RuleCollate, "rule-collate",
+		config.RULE_COLLATE,"通用允许的collate, 默认(多个用逗号隔开)")
+	rootCmd.Flags().BoolVar(&runConfig.RuleAllowDropDatabase, "rule-allow-drop-database",
+		config.RULE_ALLOW_DROP_DATABASE,
+		fmt.Sprintf("是否允许删除数据库, 默认: %v", config.RULE_ALLOW_DROP_DATABASE))
+	rootCmd.Flags().BoolVar(&runConfig.RuleAllowDropTable, "rule-allow-drop-table",
+		config.RULE_ALLOW_DROP_TABLE,
+		fmt.Sprintf("是否允许删除表, 默认: %v", config.RULE_ALLOW_DROP_TABLE))
+	rootCmd.Flags().BoolVar(&runConfig.RuleAllowRenameTable, "rule-allow-rename-table",
+		config.RULE_ALLOW_RENAME_TABLE,
+		fmt.Sprintf("是否允许重命名表, 默认: %v", config.RULE_ALLOW_RENAME_TABLE))
+	rootCmd.Flags().BoolVar(&runConfig.RuleAllowTruncateTable, "rule-allow-truncate-table",
+		config.RULE_ALLOW_TRUNCATE_TABLE,
+		fmt.Sprintf("是否允许truncate表, 默认: %v", config.RULE_ALLOW_TRUNCATE_TABLE))
 }

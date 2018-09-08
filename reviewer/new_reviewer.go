@@ -1,25 +1,28 @@
 package reviewer
 
-import "github.com/daiguadaidai/m-sql-review/ast"
+import (
+	"github.com/daiguadaidai/m-sql-review/ast"
+	"github.com/daiguadaidai/m-sql-review/config"
+)
 
-func NewReviewer(_stmtNode ast.Node) Reviewer {
+func NewReviewer(_stmtNode ast.Node, _reviewConfig *config.ReviewConfig) Reviewer {
 	switch stmt := _stmtNode.(type) {
 	case *ast.CreateDatabaseStmt:
-		return &CreateDatabaseReviewer{StmtNode: stmt}
+		return &CreateDatabaseReviewer{StmtNode: stmt, ReviewConfig: _reviewConfig}
 	case *ast.DropDatabaseStmt:
-		return &DropDatabaseReviewer{StmtNode: stmt}
+		return &DropDatabaseReviewer{StmtNode: stmt, ReviewConfig: _reviewConfig}
 	case *ast.CreateTableStmt:
 	case *ast.DropTableStmt:
-		return &DropTableReviewer{StmtNode: stmt}
+		return &DropTableReviewer{StmtNode: stmt, ReviewConfig: _reviewConfig}
 	case *ast.RenameTableStmt:
-		return &RenameTableReviewer{StmtNode: stmt}
+		return &RenameTableReviewer{StmtNode: stmt, ReviewConfig: _reviewConfig}
 	case *ast.CreateViewStmt:
 	case *ast.CreateIndexStmt:
 	case *ast.DropIndexStmt:
 	case *ast.AlterTableStmt:
-		return &AlterTableReviewer{StmtNode: stmt}
+		return &AlterTableReviewer{StmtNode: stmt, ReviewConfig: _reviewConfig}
 	case *ast.TruncateTableStmt:
-		return &TruncateTableReviewer{StmtNode: stmt}
+		return &TruncateTableReviewer{StmtNode: stmt, ReviewConfig: _reviewConfig}
 	case *ast.SelectStmt:
 	case *ast.UnionStmt:
 	case *ast.LoadDataStmt:

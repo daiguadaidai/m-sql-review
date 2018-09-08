@@ -2,19 +2,23 @@ package reviewer
 
 import (
 "github.com/daiguadaidai/m-sql-review/ast"
+	"github.com/daiguadaidai/m-sql-review/config"
 )
 
 type DropTableReviewer struct {
 	StmtNode *ast.DropTableStmt
+	ReviewConfig *config.ReviewConfig
 }
 
 func (this *DropTableReviewer) Review() *ReviewMSG {
 	var reviewMSG *ReviewMSG
 
-	if !RULE_ALLOW_DROP_TABLE {
+	if !this.ReviewConfig.RuleAllowDropTable {
 		reviewMSG = new(ReviewMSG)
 		reviewMSG.Code = REVIEW_CODE_ERROR
-		reviewMSG.MSG = MSG_FORBIDEN_DROP_TABLE_ERROR
+		reviewMSG.MSG = config.MSG_FORBIDEN_DROP_TABLE_ERROR
+
+		return reviewMSG
 	}
 
 	reviewMSG = new(ReviewMSG)

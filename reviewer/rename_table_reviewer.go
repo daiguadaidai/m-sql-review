@@ -2,20 +2,22 @@ package reviewer
 
 import (
 "github.com/daiguadaidai/m-sql-review/ast"
+	"github.com/daiguadaidai/m-sql-review/config"
 )
 
 type RenameTableReviewer struct {
 	StmtNode *ast.RenameTableStmt
+	ReviewConfig *config.ReviewConfig
 }
 
 func (this *RenameTableReviewer) Review() *ReviewMSG {
 	var reviewMSG *ReviewMSG
 
 	// 禁止使用 rename
-	if !RULE_ALLOW_RENAME_TABLE {
+	if !this.ReviewConfig.RuleAllowRenameTable {
 		reviewMSG = new(ReviewMSG)
 		reviewMSG.Code = REVIEW_CODE_ERROR
-		reviewMSG.MSG = MSG_FORBIDEN_RENAME_TABLE_ERROR
+		reviewMSG.MSG = config.MSG_FORBIDEN_RENAME_TABLE_ERROR
 
 		return reviewMSG
 	}
@@ -48,7 +50,7 @@ Params:
     _name: 需要检测的名称
  */
 func (this *RenameTableReviewer) DetectToTableNameLength(_name string) *ReviewMSG {
-	return DetectNameLength(_name)
+	return DetectNameLength(_name, this.ReviewConfig.RuleNameLength)
 }
 
 /* 检测数据库命名规范
@@ -56,5 +58,5 @@ Params:
     _name: 需要检测的名称
  */
 func (this *RenameTableReviewer) DetectToTableNameReg(_name string) *ReviewMSG {
-	return DetectNameReg(_name)
+	return DetectNameReg(_name, this.ReviewConfig.RuleNameReg)
 }

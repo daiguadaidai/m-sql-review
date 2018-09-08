@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/daiguadaidai/m-sql-review/parser"
 	"github.com/daiguadaidai/m-sql-review/ast"
+	"github.com/daiguadaidai/m-sql-review/config"
 )
 
 func TestRenameTableReviewer_Review(t *testing.T) {
@@ -21,6 +22,7 @@ func TestRenameTableReviewer_Review(t *testing.T) {
 
 	// 循环每一个sql语句进行解析, 并且生成相关审核信息
 	reviewMSGs := make([]*ReviewMSG, 0, 1)
+	reviewConfig := config.NewReviewConfig()
 	for _, stmtNode := range stmtNodes {
 		renameStmt := stmtNode.(*ast.RenameTableStmt)
 		for i, subStmt := range renameStmt.TableToTables {
@@ -32,7 +34,7 @@ func TestRenameTableReviewer_Review(t *testing.T) {
 			)
 		}
 
-		review := NewReviewer(stmtNode)
+		review := NewReviewer(stmtNode, reviewConfig)
 		reviewMSG := review.Review()
 		reviewMSGs = append(reviewMSGs, reviewMSG)
 	}
