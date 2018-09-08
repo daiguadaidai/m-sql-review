@@ -17,4 +17,10 @@ const (
 	RULE_ALLOW_RENAME_TABLE = false
     // 是否允许 truncate table
     RULE_ALLOW_TRUNCATE_TABLE = false
+    // 建表允许的存储引擎, 多个以逗号隔开
+    RULE_TABLE_ENGINE = "innodb"
+    // 是否允许大字段: text, blob
+    RULE_NOT_ALLOW_COLUMN_TYPE = "247,248,249,250,251,252"
+    // 表是否需要注释
+    RULE_NEED_TABLE_COMMENT = true
 )

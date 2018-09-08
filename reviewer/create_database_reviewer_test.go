@@ -9,7 +9,7 @@ import (
 
 func TestCreateDatabaseReviewer_Review(t *testing.T) {
 	sql := `
-        CREATE DATABASE IF NOT EXISTS $_yourdbname DEFAULT CHARSET utf8 COLLATE gbk_general_ci;
+        CREATE DATABASE IF NOT EXISTS 1$_yourdbname DEFAULT CHARSET utf8 COLLATE gbk_general_ci;
     `
 
 	sqlParser := parser.New()

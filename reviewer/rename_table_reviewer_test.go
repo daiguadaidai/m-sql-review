@@ -10,7 +10,7 @@ import (
 
 func TestRenameTableReviewer_Review(t *testing.T) {
 	sql := `
-		rename table test.table to test1.t1, t2 to tt2;
+		rename table test.1table to test1.t1, t2 to tt2;
     `
 
 	sqlParser := parser.New()

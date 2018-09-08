@@ -42,6 +42,7 @@ var rootCmd = &cobra.Command{
         --rule-allow-drop-table=false \
         --rule-allow-rename-table=false \
         --rule-allow-truncate-table=false
+        --rule-table-engine="innodb"
     `,
 	Run: func(cmd *cobra.Command, args []string) {
 		err := service.Run(runConfig)
@@ -84,4 +85,20 @@ func init() {
 	rootCmd.Flags().BoolVar(&runConfig.RuleAllowTruncateTable, "rule-allow-truncate-table",
 		config.RULE_ALLOW_TRUNCATE_TABLE,
 		fmt.Sprintf("是否允许truncate表, 默认: %v", config.RULE_ALLOW_TRUNCATE_TABLE))
+	rootCmd.Flags().StringVar(&runConfig.RuleTableEngine, "rule-table-engine",
+		config.RULE_TABLE_ENGINE, "允许的存储引擎 默认(多个用逗号隔开)")
+	//不允许的字段用法
+	usage := `不允许的字段类型, 填写的是字段类型代码, 如: 不能使用(text,int)使用的配置为: `
+	usage += `--rule-not-allow-column-type="252,3". `
+	usage += `字段对应代码: Decimal:0, TinyInt:1, ShortInt:2, Int:3, Float:4, Double:5, Null:6, `
+	usage += `Timestamp:7, bigint:8, MeduimInt:9, Date:10, Time:11, Datetime:12, Year:13, `
+	usage += `NewDate:= 14, Varchar:15, Bit:16, JSON:245, NewDecimal:246, Enum:247, Set:248, `
+	usage += `TinyBlob:249, MediumBlob:250, LongBlob:251, Blob:252, VarString:253, String:254, Geometry:255. `
+	usage += `注意: blob, text 这些大字段类型代码是一样的`
+	rootCmd.Flags().StringVar(&runConfig.RuleTableEngine, "rule-not-allow-column-type",
+		config.RULE_NOT_ALLOW_COLUMN_TYPE, usage)
+	rootCmd.Flags().BoolVar(&runConfig.RuleNeedTableComment, "rule-need-table-comment",
+		config.RULE_NEED_TABLE_COMMENT,
+		fmt.Sprintf("表是否需要注释 默认: %v", config.RULE_NEED_TABLE_COMMENT))
+
 }

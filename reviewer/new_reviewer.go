@@ -12,6 +12,7 @@ func NewReviewer(_stmtNode ast.Node, _reviewConfig *config.ReviewConfig) Reviewe
 	case *ast.DropDatabaseStmt:
 		return &DropDatabaseReviewer{StmtNode: stmt, ReviewConfig: _reviewConfig}
 	case *ast.CreateTableStmt:
+		return &CreateTableReviewer{StmtNode: stmt, ReviewConfig: _reviewConfig}
 	case *ast.DropTableStmt:
 		return &DropTableReviewer{StmtNode: stmt, ReviewConfig: _reviewConfig}
 	case *ast.RenameTableStmt:

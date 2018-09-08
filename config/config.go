@@ -18,6 +18,12 @@ type ReviewConfig struct {
 	RuleAllowRenameTable bool
 	// 是否允许 truncate table
 	RuleAllowTruncateTable bool
+	// 允许的存储引擎
+	RuleTableEngine string
+	// 不允许使用的字段
+	RuleNotAllowColumnType string
+	// 表是否需要注释
+	RuleNeedTableComment bool
 }
 
 func NewReviewConfig() *ReviewConfig {
@@ -31,6 +37,9 @@ func NewReviewConfig() *ReviewConfig {
 	reviewConfig.RuleAllowDropTable = RULE_ALLOW_DROP_TABLE
 	reviewConfig.RuleAllowRenameTable = RULE_ALLOW_RENAME_TABLE
 	reviewConfig.RuleAllowTruncateTable = RULE_ALLOW_TRUNCATE_TABLE
+	reviewConfig.RuleTableEngine = RULE_TABLE_ENGINE
+	reviewConfig.RuleNotAllowColumnType = RULE_NOT_ALLOW_COLUMN_TYPE
+	reviewConfig.RuleNeedTableComment = RULE_NEED_TABLE_COMMENT
 
 	return reviewConfig
 }
