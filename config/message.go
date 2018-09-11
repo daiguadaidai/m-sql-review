@@ -40,4 +40,10 @@ const (
 	MSG_INDEX_NAME_REG_ERROR = "索引名称命名不符合规范, 索引命名规范为(正则): %v"
 	// 唯一索引命名规范
 	MSG_UNIQUE_INDEX_NAME_REG_ERROR = `唯一索引名称命名不符合规范, 索引命名规范为(正则): %v`
+	// 所有字段必须为not null
+	MSG_ALL_COLUMN_NOT_NULL_ERROR = "所有字段都必须为NOT NULL"
+	// 是否允许外键
+	MSG_ALLOW_FOREIGN_KEY_ERROR = "不允许使用外键"
+	// 是否允许有全文索引
+	MSG_ALLOW_FULL_TEXT_ERROR = "不允许创建全文索引"
 )

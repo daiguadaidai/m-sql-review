@@ -38,6 +38,12 @@ type ReviewConfig struct {
 	RuleIndexNameReg string
 	// 唯一所有命名规范
 	RuleUniqueIndexNameReg string
+	// 所有字段都必须为 NOT NULL
+	RuleAllColumnNotNull bool
+	// 是否允许使用外键
+	RuleAllowForeignKey bool
+	// 是否允许有全文索引
+	RuleAllowFullText bool
 }
 
 func NewReviewConfig() *ReviewConfig {
@@ -61,6 +67,9 @@ func NewReviewConfig() *ReviewConfig {
 	reviewConfig.RuleTableNameReg = RULE_TABLE_NAME_GRE
 	reviewConfig.RuleIndexNameReg = RULE_INDEX_NAME_REG
 	reviewConfig.RuleUniqueIndexNameReg = RULE_UNIQUE_INDEX_NAME_REG
+	reviewConfig.RuleAllColumnNotNull = RULE_ALL_COLUMN_NOT_NULL
+	reviewConfig.RuleAllowForeignKey = RULE_ALLOW_FOREIGN_KEY
+	reviewConfig.RuleAllowFullText = RULE_ALLOW_FULL_TEXT
 
 	return reviewConfig
 }

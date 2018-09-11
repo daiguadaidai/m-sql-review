@@ -37,4 +37,10 @@ const (
 	RULE_INDEX_NAME_REG = `^idx_[a-z\$\d_]*$`
 	// 唯一索引命名规范
 	RULE_UNIQUE_INDEX_NAME_REG = `^udx_[a-z\$\d_]*$`
+	// 所有字段都 必须有 not null
+	RULE_ALL_COLUMN_NOT_NULL = false
+	// 是否允许外键
+	RULE_ALLOW_FOREIGN_KEY = false
+	// 是否允许有全文索引
+	RULE_ALLOW_FULL_TEXT = false
 )

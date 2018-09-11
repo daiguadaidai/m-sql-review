@@ -117,4 +117,13 @@ func init() {
 		config.RULE_INDEX_NAME_REG, "索引名命名规范(正则)")
 	rootCmd.Flags().StringVar(&runConfig.RuleUniqueIndexNameReg, "rule-unique-index-name-reg",
 		config.RULE_UNIQUE_INDEX_NAME_REG, "唯一索引名命名规范(正则)")
+	rootCmd.Flags().BoolVar(&runConfig.RuleAllColumnNotNull, "rule-all-column-not-null",
+		config.RULE_ALL_COLUMN_NOT_NULL,
+		fmt.Sprintf("是否所有字段. 默认: %v", config.RULE_ALL_COLUMN_NOT_NULL))
+	rootCmd.Flags().BoolVar(&runConfig.RuleAllowForeignKey, "rule-allow-foreign-key",
+		config.RULE_ALLOW_FOREIGN_KEY,
+		fmt.Sprintf("是否允许使用外键. 默认: %v", config.RULE_ALLOW_FOREIGN_KEY))
+	rootCmd.Flags().BoolVar(&runConfig.RuleAllowFullText, "rule-allow-full-text",
+		config.RULE_ALLOW_FULL_TEXT,
+		fmt.Sprintf("是否允许使用全文索引. 默认: %v", config.RULE_ALLOW_FULL_TEXT))
 }

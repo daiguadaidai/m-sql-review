@@ -117,6 +117,14 @@ func (this *CreateTableReviewer) Review() *ReviewMSG {
 		return reviewMSG
 	}
 
+	// 检测 所有not null 相关项
+	reviewMSG = this.DetectColumnOptions()
+	if reviewMSG != nil {
+		reviewMSG.Sql = this.StmtNode.Text()
+		reviewMSG.Code = REVIEW_CODE_ERROR
+		return reviewMSG
+	}
+
 	// 能走到这里说明写的语句审核成功
 	reviewMSG = new(ReviewMSG)
 	reviewMSG.Code = REVIEW_CODE_SUCCESS
@@ -228,51 +236,22 @@ func (this *CreateTableReviewer) DetectColumns() *ReviewMSG {
 		}
 
 		// 5. 字段定义选项
-		reviewMSG = this.DetectColumnOptions(column)
-		if reviewMSG != nil {
-			return reviewMSG
-		}
-
+		this.SetReviewPkInfo(column)
 	}
 
 	return reviewMSG
 }
 
-func (this *CreateTableReviewer) DetectColumnOptions(_column *ast.ColumnDef) *ReviewMSG {
-	var reviewMSG *ReviewMSG
-	var hasColumnComment bool = false // 用于检测字段的注释是否指定
-
+// 设置 createTableReviewer 主键的相关信息, 主键字段有哪些, 是否有自增
+func (this *CreateTableReviewer) SetReviewPkInfo(_column *ast.ColumnDef) {
 	for _, option := range _column.Options {
 		switch option.Tp {
 		case ast.ColumnOptionPrimaryKey:
 			this.PKNames[_column.Name.String()] = true
-		case ast.ColumnOptionNotNull:
 		case ast.ColumnOptionAutoIncrement:
 			this.AutoIncrementName = _column.Name.String()
-		case ast.ColumnOptionDefaultValue:
-		case ast.ColumnOptionUniqKey:
-		case ast.ColumnOptionNull:
-		case ast.ColumnOptionOnUpdate:
-		case ast.ColumnOptionFulltext:
-		case ast.ColumnOptionComment:
-			if strings.Trim(option.Expr.GetValue().(string), " ") != "" {
-				hasColumnComment = true
-			}
-		case ast.ColumnOptionGenerated:
-		case ast.ColumnOptionReference:
 		}
 	}
-
-	// 检测字段是否有注释
-	if this.ReviewConfig.RuleNeedColumnComment {
-		if !hasColumnComment {
-			reviewMSG = new(ReviewMSG)
-			reviewMSG.MSG = fmt.Sprintf("字段: %v 检测失败. %v", _column.Name.String(),
-				config.MSG_NEED_COLUMN_COMMENT_ERROR)
-		}
-	}
-
-	return reviewMSG
 }
 
 // 检测在定义字段中有多个 primary key出现
@@ -411,7 +390,19 @@ func (this *CreateTableReviewer) DetectConstraints() *ReviewMSG {
 				return reviewMSG
 			}
 		case ast.ConstraintForeignKey:
+			// 检测是否允许有外键
+			if !this.ReviewConfig.RuleAllowForeignKey { // 不允许有外键, 报错
+				reviewMSG = new(ReviewMSG)
+				reviewMSG.MSG = fmt.Sprintf("检测失败. %v. 表名: %v",
+					config.MSG_ALLOW_FOREIGN_KEY_ERROR, this.StmtNode.Table.Name.String())
+			}
 		case ast.ConstraintFulltext:
+			// 检测是否允许使用全文索引
+			if !this.ReviewConfig.RuleAllowFullText { // 不允许使用全文索引, 报错
+				reviewMSG = new(ReviewMSG)
+				reviewMSG.MSG = fmt.Sprintf("检测失败. %v. 表名: %v",
+					config.MSG_ALLOW_FULL_TEXT_ERROR, this.StmtNode.Table.Name.String())
+			}
 		}
 	}
 
@@ -469,6 +460,63 @@ func (this *CreateTableReviewer) DectectConstraintUniqIndex(_constraint *ast.Con
 			fmt.Sprintf(config.MSG_UNIQUE_INDEX_NAME_REG_ERROR, this.ReviewConfig.RuleUniqueIndexNameReg),
 			_constraint.Name)
 		return reviewMSG
+	}
+
+	return reviewMSG
+}
+
+// 检测字段not null 相关信息
+func (this *CreateTableReviewer) DetectColumnOptions() *ReviewMSG {
+	var reviewMSG *ReviewMSG
+
+	for _, column := range this.StmtNode.Cols {
+		var isNotNull bool = false // 该字段是否为 not null
+		// var hasDefaultValue bool = false // 是否有默认值
+		var hasColumnComment bool = false // 用于检测字段的注释是否指定
+
+		// 获取字段是否 not null, 是否有默认值
+		for _, option := range column.Options {
+			switch option.Tp {
+			case ast.ColumnOptionPrimaryKey:
+			case ast.ColumnOptionNotNull:
+				isNotNull = true
+			case ast.ColumnOptionDefaultValue:
+				// hasDefaultValue = true
+			case ast.ColumnOptionComment:
+				if strings.Trim(option.Expr.GetValue().(string), " ") != "" {
+					hasColumnComment = true
+				}
+			}
+		}
+
+		// 1. 检测字段是否有注释
+		if this.ReviewConfig.RuleNeedColumnComment { // 字段需要都有注释
+			if !hasColumnComment {
+				reviewMSG = new(ReviewMSG)
+				reviewMSG.MSG = fmt.Sprintf("字段: %v 检测失败. %v", column.Name.String(),
+					config.MSG_NEED_COLUMN_COMMENT_ERROR)
+				return reviewMSG
+			}
+		}
+
+		// 2. 检测是否设置都为 NOT NULL
+		if this.ReviewConfig.RuleAllColumnNotNull { // 需要所有字段为 NOT NULL
+			if !isNotNull {
+				reviewMSG = new(ReviewMSG)
+				reviewMSG.MSG = fmt.Sprintf("字段: %v 检测失败. %v", column.Name.String(),
+					config.MSG_ALL_COLUMN_NOT_NULL_ERROR)
+				return reviewMSG
+			}
+		}
+
+		// 3. 主键必须为not null
+		if _, ok := this.PKNames[column.Name.String()]; ok { // 该字段是主键
+			if !isNotNull {
+				reviewMSG = new(ReviewMSG)
+				reviewMSG.MSG = fmt.Sprintf("检测失败. 主键必须定义为NOT NULL. 主键: %v", column.Name.String())
+				return reviewMSG
+			}
+		}
 	}
 
 	return reviewMSG

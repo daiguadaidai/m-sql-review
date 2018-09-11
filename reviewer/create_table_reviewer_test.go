@@ -18,7 +18,7 @@ CREATE TABLE test.mf_fd_cache (
   flightNo varchar(10) NOT NULL DEFAULT '' Comment '注释',
   flightDate date NOT NULL DEFAULT '1000-10-10' Comment '注释',
   flightTime varchar(20) NOT NULL DEFAULT '' Comment '注释',
-  isCodeShare tinyint(1) NOT NULL DEFAULT '0' Comment '注释',
+  isCodeShare tinyint(1) Comment '注释',
   tax int(11) NOT NULL DEFAULT '0' Comment '注释',
   yq int(11) NOT NULL DEFAULT '0' Comment '注释',
   cabin char(2) NOT NULL DEFAULT '' Comment '注释',
@@ -28,9 +28,10 @@ CREATE TABLE test.mf_fd_cache (
   uptime datetime NOT NULL DEFAULT '1000-10-10 10:10:10' Comment '注释',
   PRIMARY KEY (id),
   UNIQUE KEY udx_uid (dep, arr, flightNo, flightDate, cabin),
-  Index uptime (uptime),
-  KEY flight (dep,arr),
-  KEY flightDate (flightDate)
+  Index idx_uptime (uptime),
+  KEY idx_flight (dep,arr),
+  KEY idx_flightdate (flightDate),
+  FULLTEXT KEY full_asdfaf (flightTime)
 ) ENGINE=InnoDb  DEFAULT CHARSET=utF8 COLLATE=Utf8mb4_general_ci comment="你号";
     `
 
@@ -80,22 +81,34 @@ CREATE TABLE test.mf_fd_cache (
 		// 字段option
 		for i, column := range createTableStmt.Cols {
 			fmt.Println(i, column.Name.String(), column.Tp.Tp, column.Tp.Tp == mysql.TypeBlob)
+			optionTypes := make([]string, 0, 1)
 			for _, option := range column.Options {
 				switch option.Tp {
 				case ast.ColumnOptionPrimaryKey:
+					optionTypes = append(optionTypes, "PrimaryKey")
 				case ast.ColumnOptionNotNull:
+					optionTypes = append(optionTypes, "NotNull")
 				case ast.ColumnOptionAutoIncrement:
+					optionTypes = append(optionTypes, "AutoIncrement")
 				case ast.ColumnOptionDefaultValue:
+					optionTypes = append(optionTypes, fmt.Sprintf("DefaultValue:%v", option.Expr.GetValue()))
 				case ast.ColumnOptionUniqKey:
+					optionTypes = append(optionTypes, "UniqKey")
 				case ast.ColumnOptionNull:
+					optionTypes = append(optionTypes, "NULL")
 				case ast.ColumnOptionOnUpdate:
+					optionTypes = append(optionTypes, "OnUpdate")
 				case ast.ColumnOptionFulltext:
+					optionTypes = append(optionTypes, "Fulltext")
 				case ast.ColumnOptionComment:
-					fmt.Println("column comment: ", option.Expr.GetValue(), option.Expr.GetValue() == "主键")
+					optionTypes = append(optionTypes, fmt.Sprintf("Comment:%v", option.Expr.GetValue()))
 				case ast.ColumnOptionGenerated:
+					optionTypes = append(optionTypes, "Generated")
 				case ast.ColumnOptionReference:
+					optionTypes = append(optionTypes, "Reference")
 				}
 			}
+			fmt.Println("column Name:", column.Name.String(), optionTypes)
 		}
 
 
