@@ -1,11 +1,11 @@
 package reviewer
 
 import (
-	"regexp"
 	"fmt"
 	"github.com/daiguadaidai/m-sql-review/config"
 	"strings"
 	"strconv"
+	"github.com/dlclark/regexp2"
 )
 
 /* 检测名称长度是否合法
@@ -31,9 +31,9 @@ Params:
 	_name: 需要检测的名字
  */
 func DetectNameReg(_name string, _reg string) *ReviewMSG {
-	// 正则规则: 以(字母/$/_)开头, 之后任意多个(字母/数字/_/$)
-	match, err := regexp.MatchString(_reg, _name)
-	if err != nil || !match {
+	// 使用正则表达式匹配名称
+	re := regexp2.MustCompile(_reg, 0)
+	if isMatch, _ := re.MatchString(_name); !isMatch {
 		return &ReviewMSG{
 			MSG: fmt.Sprintf("检测失败. %v. 名称: %v, ", config.MSG_NAME_REG_ERROR, _name),
 		}

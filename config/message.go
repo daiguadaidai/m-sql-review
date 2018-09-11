@@ -26,4 +26,18 @@ const (
 	MSG_NOT_ALLOW_COLUMN_TYPE_ERROR = "这些字段不能使用 %v"
 	// 表需要注释
 	MSG_NEED_TABLE_COMMENT_ERROR = "新建表必须要有注释"
+	// 字段需要注释
+	MSG_NEED_COLUMN_COMMENT_ERROR = "字段必须要有注释"
+	// 主键需要自增
+	MSG_PK_AUTO_INCREMENT_ERROR = "主键字段中必须有一个字段有自增属性"
+	// 必须有主键
+	MSG_NEED_PK = "必须要有主键"
+	// 索引字段个数
+	MSG_INDEX_COLUMN_COUNT_ERROR = "索引字段不能超过 %v 个"
+	// 表名命名规则
+	MSG_TABLE_NAME_GRE_ERROR = "表名, 命名规则不符合规范. 规范为(正则): %v"
+	// 所有名称命名规范
+	MSG_INDEX_NAME_REG_ERROR = "索引名称命名不符合规范, 索引命名规范为(正则): %v"
+	// 唯一索引命名规范
+	MSG_UNIQUE_INDEX_NAME_REG_ERROR = `唯一索引名称命名不符合规范, 索引命名规范为(正则): %v`
 )

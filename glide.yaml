@@ -100,6 +100,9 @@ import:
   repo: https://github.com/google/go-genproto
 - package: gopkg.in/natefinch/lumberjack.v2
   version: v2.1
+  repo: https://github.com/natefinch/lumberjack
+- package: github.com/dlclark/regexp2
+  version: v1.1.6
 testImport:
 - package: github.com/etcd-io/gofail
   subpackages:

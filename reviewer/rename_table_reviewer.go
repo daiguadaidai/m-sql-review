@@ -100,5 +100,14 @@ Params:
     _name: 需要检测的名称
  */
 func (this *RenameTableReviewer) DetectToTableNameReg(_name string) *ReviewMSG {
-	return DetectNameReg(_name, this.ReviewConfig.RuleNameReg)
+	var reviewMSG *ReviewMSG
+
+	reviewMSG = DetectNameReg(_name, this.ReviewConfig.RuleTableNameReg)
+	if reviewMSG != nil {
+		reviewMSG.MSG = fmt.Sprintf("检测失败. %v 表名: %v",
+			fmt.Sprintf(config.MSG_TABLE_NAME_GRE_ERROR, this.ReviewConfig.RuleTableNameReg),
+			_name)
+	}
+
+	return reviewMSG
 }

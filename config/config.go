@@ -24,6 +24,20 @@ type ReviewConfig struct {
 	RuleNotAllowColumnType string
 	// 表是否需要注释
 	RuleNeedTableComment bool
+	// 字段需要有注释
+	RuleNeedColumnComment bool
+	// 主键自增
+	RulePKAutoIncrement bool
+	// 必须要要有主键
+	RuleNeedPK bool
+	// 索引字段个数
+	RuleIndexColumnCount int
+	// 表名 命名规范
+	RuleTableNameReg string
+	// 索引命名规范
+	RuleIndexNameReg string
+	// 唯一所有命名规范
+	RuleUniqueIndexNameReg string
 }
 
 func NewReviewConfig() *ReviewConfig {
@@ -40,6 +54,13 @@ func NewReviewConfig() *ReviewConfig {
 	reviewConfig.RuleTableEngine = RULE_TABLE_ENGINE
 	reviewConfig.RuleNotAllowColumnType = RULE_NOT_ALLOW_COLUMN_TYPE
 	reviewConfig.RuleNeedTableComment = RULE_NEED_TABLE_COMMENT
+	reviewConfig.RuleNeedColumnComment = RULE_NEED_COLUMN_COMMENT
+	reviewConfig.RulePKAutoIncrement = RULE_PK_AUTO_INCREMENT
+	reviewConfig.RuleNeedPK = RULE_NEED_PK
+	reviewConfig.RuleIndexColumnCount = RULE_INDEX_COLUMN_COUNT
+	reviewConfig.RuleTableNameReg = RULE_TABLE_NAME_GRE
+	reviewConfig.RuleIndexNameReg = RULE_INDEX_NAME_REG
+	reviewConfig.RuleUniqueIndexNameReg = RULE_UNIQUE_INDEX_NAME_REG
 
 	return reviewConfig
 }

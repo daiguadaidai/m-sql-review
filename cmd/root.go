@@ -100,5 +100,21 @@ func init() {
 	rootCmd.Flags().BoolVar(&runConfig.RuleNeedTableComment, "rule-need-table-comment",
 		config.RULE_NEED_TABLE_COMMENT,
 		fmt.Sprintf("表是否需要注释 默认: %v", config.RULE_NEED_TABLE_COMMENT))
-
+	rootCmd.Flags().BoolVar(&runConfig.RuleNeedColumnComment, "rule-need-column-comment",
+		config.RULE_NEED_COLUMN_COMMENT,
+		fmt.Sprintf("字段是否需要注释 默认: %v", config.RULE_NEED_COLUMN_COMMENT))
+	rootCmd.Flags().BoolVar(&runConfig.RulePKAutoIncrement, "rule-pk-auto-increment",
+		config.RULE_PK_AUTO_INCREMENT,
+		fmt.Sprintf("主键字段中是否需要有自增字段 默认: %v", config.RULE_PK_AUTO_INCREMENT))
+	rootCmd.Flags().BoolVar(&runConfig.RuleNeedPK, "rule-need-pk",
+		config.RULE_NEED_PK,
+		fmt.Sprintf("建表是否需要主键 默认: %v", config.RULE_NEED_PK))
+	rootCmd.Flags().IntVar(&runConfig.RuleIndexColumnCount, "rule-index-column-count",
+		config.RULE_INDEX_COLUMN_COUNT, "索引允许字段个数")
+	rootCmd.Flags().StringVar(&runConfig.RuleTableNameReg, "rule-table-name-reg",
+		config.RULE_TABLE_NAME_GRE, "表名, 名命名规范(正则)")
+	rootCmd.Flags().StringVar(&runConfig.RuleIndexNameReg, "rule-index-name-reg",
+		config.RULE_INDEX_NAME_REG, "索引名命名规范(正则)")
+	rootCmd.Flags().StringVar(&runConfig.RuleUniqueIndexNameReg, "rule-unique-index-name-reg",
+		config.RULE_UNIQUE_INDEX_NAME_REG, "唯一索引名命名规范(正则)")
 }

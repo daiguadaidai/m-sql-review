@@ -1,5 +1,5 @@
-hash: 03191f91baf05915362b642c00f7ad732d9bb8f896d699bbe6c25d6a10bc3272
-updated: 2018-09-07T22:47:10.706392896+08:00
+hash: fb7cdc801463354ed9c24600feedd8cec059b00d06da66b49ce1c0308b556136
+updated: 2018-09-11T16:55:14.384338165+08:00
 imports:
 - name: github.com/beorn7/perks
   version: 3a771d992973f24aa725d07868b467d1ddfceafb
@@ -35,6 +35,10 @@ imports:
   version: 529a34b1c186b483642a7a230c67521d9aa4b0fb
 - name: github.com/cznic/y
   version: 045f81c6662a943978e456166b7f30f13f633313
+- name: github.com/dlclark/regexp2
+  version: 487489b64fb796de2e55f4e8a4ad1e145f80e957
+  subpackages:
+  - syntax
 - name: github.com/gogo/protobuf
   version: 342cbe0a04158f6dcb03ca0079991a51a4248c02
   subpackages:
@@ -81,6 +85,10 @@ imports:
   version: 1949ddbfd147afd4d964a9f00b24eb291e0e7c38
   subpackages:
   - ext
+  - log
+- name: github.com/outbrain/golib
+  version: ab954725f502c2be1491afadbbc66da2f99a45ae
+  subpackages:
   - log
 - name: github.com/pingcap/check
   version: 1c287c953996ab3a0bf535dba9d53d809d3dc0b6
@@ -244,6 +252,7 @@ imports:
   - transport
 - name: gopkg.in/natefinch/lumberjack.v2
   version: a96e63847dc3c67d17befa69c303767e2f84e54f
+  repo: https://github.com/natefinch/lumberjack
 testImports:
 - name: github.com/etcd-io/gofail
   version: 51ce9a71510a58bad5ae66ddd278ef28762a1550
