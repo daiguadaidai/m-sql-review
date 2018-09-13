@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"github.com/daiguadaidai/m-sql-review/config"
 	"strings"
+	"github.com/pingcap/tidb/mysql"
+	"github.com/daiguadaidai/m-sql-review/common"
 )
 
 type CreateTableReviewer struct {
@@ -19,7 +21,12 @@ type CreateTableReviewer struct {
 	}
 	*/
 	Indexes map[string][]string
-	hasTableComment bool // 有表注释
+	UniqueIndexes map[string][]string // 所有的唯一索引
+	HasTableComment bool // 有表注释
+	NotAllowColumnTypeMap map[string]bool // 不允许的字段类型
+	NotNullColumnTypeMap map[string]bool // 必须为not null的字段类型
+	NotNullColumnNameMap map[string]bool // 必须为 not null的字段名称
+	ColumnTypeCount map[byte]int // 保存字段类型出现的个数
 }
 
 // 初始化一些变量
@@ -27,6 +34,11 @@ func (this *CreateTableReviewer) Init() {
 	this.ColumnNames = make(map[string]bool)
 	this.PKNames = make(map[string]bool)
 	this.Indexes = make(map[string][]string)
+	this.UniqueIndexes = make(map[string][]string)
+	this.NotAllowColumnTypeMap = this.ReviewConfig.GetNotAllowColumnTypeMap()
+	this.NotNullColumnTypeMap = this.ReviewConfig.GetNotNullColumnTypeMap()
+	this.NotNullColumnNameMap = this.ReviewConfig.GetNotNullColumnNameMap()
+	this.ColumnTypeCount = make(map[byte]int)
 }
 
 func (this *CreateTableReviewer) Review() *ReviewMSG {
@@ -117,8 +129,40 @@ func (this *CreateTableReviewer) Review() *ReviewMSG {
 		return reviewMSG
 	}
 
-	// 检测 所有not null 相关项
+	// 检测 字段 相关项
 	reviewMSG = this.DetectColumnOptions()
+	if reviewMSG != nil {
+		reviewMSG.Sql = this.StmtNode.Text()
+		reviewMSG.Code = REVIEW_CODE_ERROR
+		return reviewMSG
+	}
+
+	// 检测Text字段类型使用个数是否超过限制
+	reviewMSG = this.DetectTextColumnTypeCount()
+	if reviewMSG != nil {
+		reviewMSG.Sql = this.StmtNode.Text()
+		reviewMSG.Code = REVIEW_CODE_ERROR
+		return reviewMSG
+	}
+
+	// 检测Text字段类型使用个数是否超过限制
+	reviewMSG = this.DetectNeedIndexColumnName()
+	if reviewMSG != nil {
+		reviewMSG.Sql = this.StmtNode.Text()
+		reviewMSG.Code = REVIEW_CODE_ERROR
+		return reviewMSG
+	}
+
+	// 检测必须要有的字段名
+	reviewMSG = this.DetectHaveColumnName()
+	if reviewMSG != nil {
+		reviewMSG.Sql = this.StmtNode.Text()
+		reviewMSG.Code = REVIEW_CODE_ERROR
+		return reviewMSG
+	}
+
+	// 检测普通索引中不能有唯一索引联合在一起的字段
+	reviewMSG = this.DetectNormalIndexHaveUniqueIndex()
 	if reviewMSG != nil {
 		reviewMSG.Sql = this.StmtNode.Text()
 		reviewMSG.Code = REVIEW_CODE_ERROR
@@ -178,7 +222,7 @@ func (this *CreateTableReviewer) DetectTableOptions() *ReviewMSG {
 		case ast.TableOptionComment:
 			// 有设置表注释, 并且不是空字符串, 才代表有设置注释
 			if strings.Trim(option.StrValue, " ") != "" {
-				this.hasTableComment = true
+				this.HasTableComment = true
 			}
 		}
 		// 一检测到有问题键停止下面检测, 返回检测错误值
@@ -189,7 +233,7 @@ func (this *CreateTableReviewer) DetectTableOptions() *ReviewMSG {
 
 	// 检测表是否有注释
 	if this.ReviewConfig.RuleNeedTableComment {
-		if !this.hasTableComment {
+		if !this.HasTableComment {
 			reviewMSG = new(ReviewMSG)
 			reviewMSG.MSG = fmt.Sprintf("表: %v 检测失败. %v", this.StmtNode.Table.Name.String(),
 				config.MSG_NEED_TABLE_COMMENT_ERROR)
@@ -227,19 +271,25 @@ func (this *CreateTableReviewer) DetectColumns() *ReviewMSG {
 			return reviewMSG
 		}
 
-		// 4.检测不允许的字段类型
-		reviewMSG = DetectNotAllowColumnType(column.Tp.Tp, this.ReviewConfig.RuleNotAllowColumnType)
-		if reviewMSG != nil {
-			reviewMSG.MSG = fmt.Sprintf("字段: %v, 类型: %v 不被允许. %v",
-				column.Name.String(), column.Tp.String(), reviewMSG.MSG)
-			return reviewMSG
-		}
+		// 4. 增加字段类型使用个数
+		this.IncrColumnTypeCount(column)
 
 		// 5. 字段定义选项
 		this.SetReviewPkInfo(column)
 	}
 
 	return reviewMSG
+}
+
+// 增加字段个数
+func (this *CreateTableReviewer) IncrColumnTypeCount(_column *ast.ColumnDef) {
+	switch _column.Tp.Tp {
+	case mysql.TypeTinyBlob, mysql.TypeMediumBlob, mysql.TypeLongBlob, mysql.TypeBlob:
+		// 4种大字段都设置为是 Blob
+		this.ColumnTypeCount[mysql.TypeBlob] ++
+	default:
+		this.ColumnTypeCount[_column.Tp.Tp] ++
+	}
 }
 
 // 设置 createTableReviewer 主键的相关信息, 主键字段有哪些, 是否有自增
@@ -375,10 +425,15 @@ func (this *CreateTableReviewer) DetectConstraints() *ReviewMSG {
 			if reviewMSG != nil {
 				return reviewMSG
 			}
-			// 赋值主键列名
+
+			// 添加唯一索引, 赋值主键列名
+			uniqueIndex := make([]string, 0, 1)
 			for _, pkName := range constraint.Keys {
+				uniqueIndex = append(uniqueIndex, pkName.Column.String())
 				this.PKNames[pkName.Column.String()] = true
 			}
+			this.UniqueIndexes[constraint.Name] = uniqueIndex
+
 		case ast.ConstraintKey, ast.ConstraintIndex:
 			reviewMSG = this.DectectConstraintIndex(constraint)
 			if reviewMSG != nil {
@@ -389,6 +444,14 @@ func (this *CreateTableReviewer) DetectConstraints() *ReviewMSG {
 			if reviewMSG != nil {
 				return reviewMSG
 			}
+
+			// 添加唯一索引
+			uniqueIndex := make([]string, 0, 1)
+			for _, column := range constraint.Keys {
+				uniqueIndex = append(uniqueIndex, column.Column.String())
+			}
+			this.UniqueIndexes[constraint.Name] = uniqueIndex
+
 		case ast.ConstraintForeignKey:
 			// 检测是否允许有外键
 			if !this.ReviewConfig.RuleAllowForeignKey { // 不允许有外键, 报错
@@ -465,9 +528,10 @@ func (this *CreateTableReviewer) DectectConstraintUniqIndex(_constraint *ast.Con
 	return reviewMSG
 }
 
-// 检测字段not null 相关信息
+// 检测字段 相关信息
 func (this *CreateTableReviewer) DetectColumnOptions() *ReviewMSG {
 	var reviewMSG *ReviewMSG
+
 
 	for _, column := range this.StmtNode.Cols {
 		var isNotNull bool = false // 该字段是否为 not null
@@ -489,7 +553,16 @@ func (this *CreateTableReviewer) DetectColumnOptions() *ReviewMSG {
 			}
 		}
 
-		// 1. 检测字段是否有注释
+		// 1.检测不允许的字段类型
+		if _, ok := this.NotAllowColumnTypeMap[config.GetTextSqlTypeByByte(column.Tp.Tp)]; ok {
+			reviewMSG = new(ReviewMSG)
+			reviewMSG.MSG = fmt.Sprintf("字段: %v, 类型: %v 不被允许. %v",
+				column.Name.String(), column.Tp.String(),
+				fmt.Sprintf(config.MSG_NOT_ALLOW_COLUMN_TYPE_ERROR, this.ReviewConfig.RuleNotAllowColumnType))
+			return reviewMSG
+		}
+
+		// 2. 检测字段是否有注释
 		if this.ReviewConfig.RuleNeedColumnComment { // 字段需要都有注释
 			if !hasColumnComment {
 				reviewMSG = new(ReviewMSG)
@@ -499,7 +572,7 @@ func (this *CreateTableReviewer) DetectColumnOptions() *ReviewMSG {
 			}
 		}
 
-		// 2. 检测是否设置都为 NOT NULL
+		// 3. 检测是否设置都为 NOT NULL
 		if this.ReviewConfig.RuleAllColumnNotNull { // 需要所有字段为 NOT NULL
 			if !isNotNull {
 				reviewMSG = new(ReviewMSG)
@@ -509,12 +582,131 @@ func (this *CreateTableReviewer) DetectColumnOptions() *ReviewMSG {
 			}
 		}
 
-		// 3. 主键必须为not null
+		// 4. 主键必须为not null
 		if _, ok := this.PKNames[column.Name.String()]; ok { // 该字段是主键
 			if !isNotNull {
 				reviewMSG = new(ReviewMSG)
 				reviewMSG.MSG = fmt.Sprintf("检测失败. 主键必须定义为NOT NULL. 主键: %v", column.Name.String())
 				return reviewMSG
+			}
+		}
+
+		// 5. 必须为NOT NULL的字段类型
+		if _, ok := this.NotNullColumnTypeMap[config.GetTextSqlTypeByByte(column.Tp.Tp)]; ok {
+			if !isNotNull {
+				reviewMSG = new(ReviewMSG)
+				reviewMSG.MSG = fmt.Sprintf("检测失败. %v. 字段: %v",
+					fmt.Sprintf(config.MSG_NOT_NULL_COLUMN_TYPE_ERROR, this.ReviewConfig.RuleNotNullColumnType),
+					column.Name.String())
+				return reviewMSG
+			}
+		}
+
+		// 6. 必须为NOT NULL的字段名称
+		if _, ok := this.NotNullColumnNameMap[strings.ToLower(column.Name.String())]; ok {
+			if !isNotNull {
+				reviewMSG = new(ReviewMSG)
+				reviewMSG.MSG = fmt.Sprintf("检测失败.字段: %v 必须为NOT NULL. %v. ",
+					column.Name.String(),
+					fmt.Sprintf(config.MSG_NOT_NULL_COLUMN_NAME_ERROR, this.ReviewConfig.RuleNotNullColumnName))
+				return reviewMSG
+			}
+		}
+	}
+
+
+	return reviewMSG
+}
+
+
+// 检测Text字段类型使用个数
+func (this *CreateTableReviewer) DetectTextColumnTypeCount() *ReviewMSG {
+	var reviewMSG *ReviewMSG
+
+	if count, ok := this.ColumnTypeCount[mysql.TypeBlob]; ok {
+		if count > this.ReviewConfig.RuleTextTypeColumnCount {
+			reviewMSG = new(ReviewMSG)
+			reviewMSG.MSG = fmt.Sprintf("检测失败. 表: %v. %v.",
+				this.StmtNode.Table.Name.String(),
+				fmt.Sprintf(config.MSG_TEXT_TYPE_COLUMN_COUNT_ERROR, this.ReviewConfig.RuleTextTypeColumnCount))
+			return reviewMSG
+		}
+	}
+
+	return reviewMSG
+}
+
+// 检测必须指定索引的字段名, 并且必须是索引的第一个字段
+func (this *CreateTableReviewer) DetectNeedIndexColumnName() *ReviewMSG {
+	var reviewMSG *ReviewMSG
+
+	// 循环必须要有索引的字段.
+	for needIndexColumnName, _ := range this.ReviewConfig.GetNeedIndexColumnNameMap() {
+		// 先判断是否有该字段
+		if _, ok := this.ColumnNames[needIndexColumnName]; !ok {
+			continue
+		}
+
+		exists := false // 初始化该字段不存在索引
+
+		for _, Index := range this.Indexes { // 只需要检查索引中的第一个字段名就好
+			if needIndexColumnName == strings.ToLower(Index[0]) {
+				exists = true
+				break
+			}
+		}
+
+		if !exists {
+			reviewMSG = new(ReviewMSG)
+			reviewMSG.MSG = fmt.Sprintf("检测失败. 字段 %v 必须要有索引. %v.",
+				needIndexColumnName,
+				fmt.Sprintf(config.MSG_NEED_INDEX_COLUMN_NAME_ERROR, this.ReviewConfig.RuleNeedIndexColumnName))
+			return reviewMSG
+		}
+	}
+
+	return reviewMSG
+}
+
+// 检测必须包含的字段名
+func (this *CreateTableReviewer) DetectHaveColumnName() *ReviewMSG {
+	var reviewMSG *ReviewMSG
+
+	// 循环必须要有索引的字段.
+	for haveColumnName, _ := range this.ReviewConfig.GetHaveColumnNameMap() {
+		// 先判断是否有该字段
+		if _, ok := this.ColumnNames[haveColumnName]; !ok {
+			reviewMSG = new(ReviewMSG)
+			reviewMSG.MSG = fmt.Sprintf("检测失败. 表: %v. 没有指定字段: %v. %v.",
+				this.StmtNode.Table.Name.String(),
+				haveColumnName,
+				fmt.Sprintf(config.MSG_HAVE_COLUMN_NAME_ERROR, this.ReviewConfig.RuleHaveColumnName))
+			return reviewMSG
+		}
+	}
+
+	return reviewMSG
+}
+
+// 检测普通索引中不能有唯一索引的字段(唯一索引要连在一起)
+func (this *CreateTableReviewer) DetectNormalIndexHaveUniqueIndex() *ReviewMSG {
+	var reviewMSG *ReviewMSG
+
+	normalIndexes := GetNoUniqueIndexes(this.Indexes, this.UniqueIndexes)
+	hashNormalIndex := GetIndexesHashColumn(normalIndexes)
+	hashUniqueIndex := GetIndexesHashColumn(this.UniqueIndexes)
+
+	// 循环 唯一键和 索引进行匹配, 看看唯一索引的字段是否都包含在普通索引中
+	for uniqueIndexName, hashUniqueIndexStr := range hashUniqueIndex {
+		if uniqueIndexName == "" {
+			uniqueIndexName = "PRIMARY KEY"
+		}
+
+		for normalIndexName, hashNormalIndexStr := range hashNormalIndex {
+			if isMatch := common.StrIsMatch(hashNormalIndexStr, hashUniqueIndexStr) ; isMatch {
+				reviewMSG = new(ReviewMSG)
+				reviewMSG.MSG = fmt.Sprintf("检测失败. 普通索引: %v, 包含了唯一索引: %v 的字段.",
+					normalIndexName, uniqueIndexName)
 			}
 		}
 	}

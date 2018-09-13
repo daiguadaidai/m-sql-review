@@ -30,8 +30,7 @@ CREATE TABLE test.mf_fd_cache (
   UNIQUE KEY udx_uid (dep, arr, flightNo, flightDate, cabin),
   Index idx_uptime (uptime),
   KEY idx_flight (dep,arr),
-  KEY idx_flightdate (flightDate),
-  FULLTEXT KEY full_asdfaf (flightTime)
+  KEY idx_flightdate (flightDate)
 ) ENGINE=InnoDb  DEFAULT CHARSET=utF8 COLLATE=Utf8mb4_general_ci comment="你号";
     `
 

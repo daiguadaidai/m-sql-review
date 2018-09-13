@@ -1,8 +1,9 @@
-package reviewer
+package config
 
 import (
 	"sync"
 	"github.com/daiguadaidai/m-sql-review/dependency/mysql"
+	"github.com/outbrain/golib/log"
 )
 
 const (
@@ -40,12 +41,17 @@ const (
 	TYPE_STR_GEOMETRY = "geometry"
 )
 
-var reviewSQLType map[string]byte
-var reviewSQLTypeOnce sync.Once
+var reviewSQLTypeStringByte map[string]byte
+var reviewSQLTypeStringByteOnce sync.Once
 
-func GetReviewSQLType() map[string]byte {
-	reviewSQLTypeOnce.Do(func() {
-		reviewSQLType = map[string]byte {
+var reviewSQLTypeByteString map[byte]string
+var reviewSQLTypeByteStringOnce sync.Once
+
+
+// 获取 字段类型(字符) 到 (Byte) 的映射
+func GetReviewSQLTypeStringByte() map[string]byte {
+	reviewSQLTypeStringByteOnce.Do(func() {
+		reviewSQLTypeStringByte = map[string]byte {
 			TYPE_STR_DECIMAL: mysql.TypeDecimal,
 			TYPE_STR_TINYINT: mysql.TypeTiny,
 			TYPE_STR_SHORT: mysql.TypeShort,
@@ -82,5 +88,57 @@ func GetReviewSQLType() map[string]byte {
 
 	})
 
-	return reviewSQLType
+	return reviewSQLTypeStringByte
 }
+
+// 获取 字段类型(Byte) 到 (字符) 的映射
+func GetReviewSQLTypeByteString() map[byte]string {
+	reviewSQLTypeByteStringOnce.Do(func() {
+		reviewSQLTypeByteString = map[byte]string {
+			mysql.TypeDecimal: TYPE_STR_DECIMAL,
+			mysql.TypeTiny: TYPE_STR_TINYINT,
+			mysql.TypeShort: TYPE_STR_SHORT,
+			mysql.TypeLong: TYPE_STR_LONG,
+			mysql.TypeFloat: TYPE_STR_FLOAT,
+			mysql.TypeDouble: TYPE_STR_DOUBLE,
+			mysql.TypeNull: TYPE_STR_NULL,
+			mysql.TypeTimestamp: TYPE_STR_TIMESTAMP,
+			mysql.TypeLonglong: TYPE_STR_LONG_LONG,
+			mysql.TypeInt24: TYPE_STR_INT24,
+			mysql.TypeDate: TPPE_STR_DATE,
+			mysql.TypeDuration: TYPE_STR_DURATION,
+			mysql.TypeDatetime: TYPE_STR_DATETIME,
+			mysql.TypeYear: TYPE_STR_YEAR,
+			mysql.TypeNewDate: TYPE_STR_NEW_DATE,
+			mysql.TypeVarchar: TYPE_STR_VARCHAR,
+			mysql.TypeBit: TYPE_STR_BIT,
+			mysql.TypeJSON: TYPE_STR_JSON,
+			mysql.TypeNewDecimal: TYPE_STR_NEW_DECIMAL,
+			mysql.TypeEnum: TYPE_STR_ENUM,
+			mysql.TypeSet: TYPE_STR_SET,
+			mysql.TypeTinyBlob: TYPE_STR_TINYBLOB,
+			mysql.TypeMediumBlob: TYPE_STR_MEDIUMBLOB,
+			mysql.TypeLongBlob: TYPE_STR_LONG_BLOB,
+			mysql.TypeBlob: TYPE_STR_BLOB,
+			mysql.TypeString: TYPE_STR_STRING,
+			mysql.TypeGeometry: TYPE_STR_GEOMETRY,
+		}
+
+	})
+
+	return reviewSQLTypeByteString
+}
+
+// 通过sql type获取对应类型字符
+func GetTextSqlTypeByByte(_sqlType byte) string {
+	sqlTypeText := ""
+
+	sqlTypeMap := GetReviewSQLTypeByteString()
+	sqlTypeText, ok := sqlTypeMap[_sqlType]
+	if !ok {
+		log.Errorf("通过MySQL类型(byte)获取对应的字符类型(string)失败")
+	}
+
+	return sqlTypeText
+}
+

@@ -87,16 +87,12 @@ func init() {
 		fmt.Sprintf("是否允许truncate表, 默认: %v", config.RULE_ALLOW_TRUNCATE_TABLE))
 	rootCmd.Flags().StringVar(&runConfig.RuleTableEngine, "rule-table-engine",
 		config.RULE_TABLE_ENGINE, "允许的存储引擎 默认(多个用逗号隔开)")
-	//不允许的字段用法
-	usage := `不允许的字段类型, 填写的是字段类型代码, 如: 不能使用(text,int)使用的配置为: `
-	usage += `--rule-not-allow-column-type="252,3". `
-	usage += `字段对应代码: Decimal:0, TinyInt:1, ShortInt:2, Int:3, Float:4, Double:5, Null:6, `
-	usage += `Timestamp:7, bigint:8, MeduimInt:9, Date:10, Time:11, Datetime:12, Year:13, `
-	usage += `NewDate:= 14, Varchar:15, Bit:16, JSON:245, NewDecimal:246, Enum:247, Set:248, `
-	usage += `TinyBlob:249, MediumBlob:250, LongBlob:251, Blob:252, VarString:253, String:254, Geometry:255. `
-	usage += `注意: blob, text 这些大字段类型代码是一样的`
 	rootCmd.Flags().StringVar(&runConfig.RuleTableEngine, "rule-not-allow-column-type",
-		config.RULE_NOT_ALLOW_COLUMN_TYPE, usage)
+		config.RULE_NOT_ALLOW_COLUMN_TYPE,
+		"不允许的字段类型, 至此的类型: " +
+		"decimal, tinyint, smallint, int, float, double, timestamp, bigint, mediumint, date, time, " +
+		"datetime, year, newdate, varchar, bit, json, newdecimal, enum, set, tinyblob, mediumblob, " +
+		"longblob, blob, tinytext, mediumtext, longtext, text, geometry")
 	rootCmd.Flags().BoolVar(&runConfig.RuleNeedTableComment, "rule-need-table-comment",
 		config.RULE_NEED_TABLE_COMMENT,
 		fmt.Sprintf("表是否需要注释 默认: %v", config.RULE_NEED_TABLE_COMMENT))
@@ -126,4 +122,15 @@ func init() {
 	rootCmd.Flags().BoolVar(&runConfig.RuleAllowFullText, "rule-allow-full-text",
 		config.RULE_ALLOW_FULL_TEXT,
 		fmt.Sprintf("是否允许使用全文索引. 默认: %v", config.RULE_ALLOW_FULL_TEXT))
+	rootCmd.Flags().StringVar(&runConfig.RuleNotNullColumnType, "rule-not-null-column-type",
+		config.RULE_NOT_NULL_COLUMN_TYPE,
+		"必须为not null的字段类型, 默认(多个用逗号隔开). 可填写的类型有: " +
+		"decimal, tinyint, smallint, int, float, double, timestamp, bigint, mediumint, date, time, " +
+		"datetime, year, newdate, varchar, bit, json, newdecimal, enum, set, tinyblob, mediumblob, " +
+		"longblob, blob, tinytext, mediumtext, longtext, text, geometry")
+	rootCmd.Flags().IntVar(&runConfig.RuleTextTypeColumnCount, "rule-text-type-column-count",
+		config.RULE_TEXT_TYPE_COLUMN_COUNT, "允许使用text/blob字段个数. 如果在rule-not-allow-column-type相关text字段." +
+		"该参数将不其作用")
+	rootCmd.Flags().StringVar(&runConfig.RuleNeedIndexColumnName, "rule-need-index-column-name",
+		config.RULE_NEED_INDEX_COLUMN_NAME, "必须要有索引的字段名, 默认(多个用逗号隔开)")
 }

@@ -1,5 +1,6 @@
 package config
 
+import "strings"
 
 type ReviewConfig struct {
 	// 通用名字长度
@@ -44,6 +45,16 @@ type ReviewConfig struct {
 	RuleAllowForeignKey bool
 	// 是否允许有全文索引
 	RuleAllowFullText bool
+	// 必须为NOT NULL的字段
+	RuleNotNullColumnType string
+	// 必须为NOT NULL 的字段名
+	RuleNotNullColumnName string
+	// text字段允许使用个数
+	RuleTextTypeColumnCount int
+	// 必须有索引的字段名
+	RuleNeedIndexColumnName string
+	// 必须包含的字段名
+	RuleHaveColumnName string
 }
 
 func NewReviewConfig() *ReviewConfig {
@@ -70,6 +81,119 @@ func NewReviewConfig() *ReviewConfig {
 	reviewConfig.RuleAllColumnNotNull = RULE_ALL_COLUMN_NOT_NULL
 	reviewConfig.RuleAllowForeignKey = RULE_ALLOW_FOREIGN_KEY
 	reviewConfig.RuleAllowFullText = RULE_ALLOW_FULL_TEXT
+	reviewConfig.RuleNotNullColumnType = RULE_NOT_NULL_COLUMN_TYPE
+	reviewConfig.RuleNotNullColumnName = RULE_NOT_NULL_COLUMN_NAME
+	reviewConfig.RuleTextTypeColumnCount = RULE_TEXT_TYPE_COLUMN_COUNT
+	reviewConfig.RuleNeedIndexColumnName = RULE_NEED_INDEX_COLUMN_NAME
+	reviewConfig.RuleHaveColumnName = RULE_HAVE_COLUMN_NAME
 
 	return reviewConfig
 }
+
+// 获取不允许的字段类型映射
+func (this *ReviewConfig) GetNotAllowColumnTypeMap() map[string]bool {
+	notAllowColumnTypeMap := make(map[string]bool)
+
+	notAllowColumnTypes := strings.Split(this.RuleNotAllowColumnType, ",")
+	for _, notAllowColumnType := range notAllowColumnTypes {
+		notAllowColumnType = strings.ToLower(strings.TrimSpace(notAllowColumnType))
+		if notAllowColumnType == "" {
+			continue
+		}
+		//  text 相关类型 要多保存为 blob 类型
+		switch notAllowColumnType {
+		case "tinytext":
+			notAllowColumnTypeMap[TYPE_STR_TINYBLOB] = true
+		case "text":
+			notAllowColumnTypeMap[TYPE_STR_BLOB] = true
+		case "mediumtext":
+			notAllowColumnTypeMap[TYPE_STR_MEDIUMBLOB] = true
+		case "longtext":
+			notAllowColumnTypeMap[TYPE_STR_LONG_BLOB] = true
+		}
+
+		notAllowColumnTypeMap[notAllowColumnType] = true
+	}
+
+	return notAllowColumnTypeMap
+}
+
+// 对必须为not null 的字段类型通过 (逗号分割). 保存到map中
+func (this *ReviewConfig) GetNotNullColumnTypeMap() map[string]bool {
+	notNullColumnTypeMap := make(map[string]bool)
+
+	notNullColumnTypes := strings.Split(this.RuleNotNullColumnType, ",")
+	for _, notNullColumnType := range notNullColumnTypes {
+		notNullColumnType = strings.ToLower(strings.TrimSpace(notNullColumnType))
+		if notNullColumnType == "" {
+			continue
+		}
+		//  text 相关类型 要多保存为 blob 类型
+		switch notNullColumnType {
+		case "tinytext":
+			notNullColumnTypeMap[TYPE_STR_TINYBLOB] = true
+		case "text":
+			notNullColumnTypeMap[TYPE_STR_BLOB] = true
+		case "mediumtext":
+			notNullColumnTypeMap[TYPE_STR_MEDIUMBLOB] = true
+		case "longtext":
+			notNullColumnTypeMap[TYPE_STR_LONG_BLOB] = true
+		}
+
+		notNullColumnTypeMap[notNullColumnType] = true
+	}
+
+	return notNullColumnTypeMap
+}
+
+// 将必须为not null的字段名规则进行(逗号)分割, 保存到map中
+func (this *ReviewConfig) GetNotNullColumnNameMap() map[string]bool {
+	notNullColumnNameMap := make(map[string]bool)
+
+	notNullColumnNames := strings.Split(this.RuleNotNullColumnName, ",")
+	for _, notNullColumnName := range notNullColumnNames {
+		notNullColumnName = strings.ToLower(strings.TrimSpace(notNullColumnName))
+		if notNullColumnName == "" {
+			continue
+		}
+
+		notNullColumnNameMap[notNullColumnName] = true
+	}
+
+	return notNullColumnNameMap
+}
+
+// 获取必须要有索引的字段
+func (this *ReviewConfig) GetNeedIndexColumnNameMap() map[string]bool {
+	needIndexColumnNameMap := make(map[string]bool)
+
+	needIndexColumnNames := strings.Split(this.RuleNeedIndexColumnName, ",")
+	for _, needIndexColumnName := range needIndexColumnNames {
+		needIndexColumnName = strings.ToLower(strings.TrimSpace(needIndexColumnName))
+		if needIndexColumnName == "" {
+			continue
+		}
+
+		needIndexColumnNameMap[needIndexColumnName] = true
+	}
+
+	return needIndexColumnNameMap
+}
+
+// 获取必须要有的字段名
+func (this *ReviewConfig) GetHaveColumnNameMap() map[string]bool {
+	haveColumnNameMap := make(map[string]bool)
+
+	haveColumnNames := strings.Split(this.RuleHaveColumnName, ",")
+	for _, haveColumnName := range haveColumnNames {
+		haveColumnName = strings.ToLower(strings.TrimSpace(haveColumnName))
+		if haveColumnName == "" {
+			continue
+		}
+
+		haveColumnNameMap[haveColumnName] = true
+	}
+
+	return haveColumnNameMap
+}
+

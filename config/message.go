@@ -23,7 +23,7 @@ const (
 	// 重复定义字段名
 	MSG_TABLE_COLUMN_DUP_ERROR = "一个字段名字不能被定义多次"
 	// 不允许的字段
-	MSG_NOT_ALLOW_COLUMN_TYPE_ERROR = "这些字段不能使用 %v"
+	MSG_NOT_ALLOW_COLUMN_TYPE_ERROR = "这些字段不能使用: %v"
 	// 表需要注释
 	MSG_NEED_TABLE_COMMENT_ERROR = "新建表必须要有注释"
 	// 字段需要注释
@@ -46,4 +46,14 @@ const (
 	MSG_ALLOW_FOREIGN_KEY_ERROR = "不允许使用外键"
 	// 是否允许有全文索引
 	MSG_ALLOW_FULL_TEXT_ERROR = "不允许创建全文索引"
+	// 必须为NOT NULL的类型
+	MSG_NOT_NULL_COLUMN_TYPE_ERROR = "%v 这些字段类型必须为NOT NULL"
+	// 必须为 NOT NULL 的字段名
+	MSG_NOT_NULL_COLUMN_NAME_ERROR = "以下字段名必须为NOT NULL: %v"
+	// text 字段允许个数
+	MSG_TEXT_TYPE_COLUMN_COUNT_ERROR = "text/blob字段使用超过 %v 个"
+	// 指定字段名必须有索引
+	MSG_NEED_INDEX_COLUMN_NAME_ERROR = "必须指定索引的字段名有: %v"
+	// 必须有的字段名
+	MSG_HAVE_COLUMN_NAME_ERROR = "必须包含的字段名有: %v"
 )

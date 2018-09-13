@@ -6,6 +6,7 @@ import (
 	"strings"
 	"strconv"
 	"github.com/dlclark/regexp2"
+	"crypto/md5"
 )
 
 /* 检测名称长度是否合法
@@ -157,4 +158,50 @@ func DetectNotAllowColumnType(_type byte, _notAllowTypeSrt string) *ReviewMSG {
 	}
 
 	return reviewMSG
+}
+
+/* 通过所有所以和所有的唯一索引获取所有的普通索引
+Params:
+    _indexes: 所有的索引
+	_uniqueIndex: 所有的普通索引
+ */
+func GetNoUniqueIndexes(_indexes map[string][]string, _uniqueIndex map[string][]string) map[string][]string{
+	normalIndexes := make(map[string][]string)
+
+	for indexName, index := range _indexes {
+		if _, ok := _uniqueIndex[indexName]; ok { // 过滤掉索引中的 唯一索引
+			continue
+		}
+
+		normalIndex := make([]string, 0, 1)
+		for _, columnName := range index {
+			normalIndex = append(normalIndex, columnName)
+		}
+
+		normalIndexes[indexName] = normalIndex
+	}
+
+	return normalIndexes
+}
+
+/* 将索引的字段转化成 hash过后的值
+Params:
+    _indexes: 需要转化的索引
+ */
+func GetIndexesHashColumn(_indexes map[string][]string) map[string]string {
+	hashIndexes := make(map[string]string)
+
+	for indexName, index := range _indexes {
+		hashIndex := make([]string, 0, 1)
+		for _, columnName := range index {
+			data := []byte(columnName)
+			has := md5.Sum(data)
+			hashColumn := fmt.Sprintf("%x", has)
+			hashIndex = append(hashIndex, hashColumn)
+		}
+
+		hashIndexes[indexName] = strings.Join(hashIndex, ",")
+	}
+
+	return hashIndexes
 }

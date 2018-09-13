@@ -20,7 +20,7 @@ const (
 	// 建表允许的存储引擎, 多个以逗号隔开
 	RULE_TABLE_ENGINE = "innodb"
 	// 是否允许大字段: text, blob
-	RULE_NOT_ALLOW_COLUMN_TYPE = "247,248,249,250,251,252"
+	RULE_NOT_ALLOW_COLUMN_TYPE = "tinytext,mediumtext,logtext,tinyblob,mediumblob,longblob"
 	// 表是否需要注释
 	RULE_NEED_TABLE_COMMENT = true
 	// 字段是否需要注释
@@ -43,4 +43,14 @@ const (
 	RULE_ALLOW_FOREIGN_KEY = false
 	// 是否允许有全文索引
 	RULE_ALLOW_FULL_TEXT = false
+	// 必须为NOT NULL 的类型
+	RULE_NOT_NULL_COLUMN_TYPE = "varchar"
+	// 必须为 NOT NULL 的字段名
+	RULE_NOT_NULL_COLUMN_NAME = "created_at,updated_at,create_time,update_time,create_at,update_at,created_time,updated_time"
+	// Text 字段类型允许使用个数
+	RULE_TEXT_TYPE_COLUMN_COUNT = 0
+	// 指定字段名必须有索引
+	RULE_NEED_INDEX_COLUMN_NAME = "created_at,updated_at,create_time,update_time,create_at,update_at,created_time,updated_time"
+	// 必须有的字段名
+	RULE_HAVE_COLUMN_NAME = ""
 )
