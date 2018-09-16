@@ -31,7 +31,6 @@ func (this *RenameTableReviewer) Review() *ReviewMSG {
 		reviewMSG = this.DetectDBNameLength(tableToTable.NewTable.Schema.String())
 		if reviewMSG != nil {
 			reviewMSG.MSG = fmt.Sprintf("%v %v", "数据库名", reviewMSG.MSG)
-			reviewMSG.Sql = this.StmtNode.Text()
 			reviewMSG.Code = REVIEW_CODE_ERROR
 			return reviewMSG
 		}
@@ -40,7 +39,6 @@ func (this *RenameTableReviewer) Review() *ReviewMSG {
 		reviewMSG = this.DetectDBNameReg(tableToTable.NewTable.Schema.String())
 		if reviewMSG != nil {
 			reviewMSG.MSG = fmt.Sprintf("%v %v", "数据库名", reviewMSG.MSG)
-			reviewMSG.Sql = this.StmtNode.Text()
 			reviewMSG.Code = REVIEW_CODE_ERROR
 			return reviewMSG
 		}
@@ -49,7 +47,6 @@ func (this *RenameTableReviewer) Review() *ReviewMSG {
 		reviewMSG = this.DetectToTableNameLength(tableToTable.NewTable.Name.String())
 		if reviewMSG != nil {
 			reviewMSG.MSG = fmt.Sprintf("%v %v", "表名", reviewMSG.MSG)
-			reviewMSG.Sql = this.StmtNode.Text()
 			reviewMSG.Code = REVIEW_CODE_ERROR
 			return reviewMSG
 		}
@@ -58,7 +55,6 @@ func (this *RenameTableReviewer) Review() *ReviewMSG {
 		reviewMSG = this.DetectToTableNameReg(tableToTable.NewTable.Name.String())
 		if reviewMSG != nil {
 			reviewMSG.MSG = fmt.Sprintf("%v %v", "表名", reviewMSG.MSG)
-			reviewMSG.Sql = this.StmtNode.Text()
 			reviewMSG.Code = REVIEW_CODE_ERROR
 			return reviewMSG
 		}

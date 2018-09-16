@@ -18,7 +18,6 @@ func (this *CreateDatabaseReviewer) Review() *ReviewMSG {
 	reviewMSG = this.DetectDBNameLength()
 	if reviewMSG != nil {
 		reviewMSG.MSG = fmt.Sprintf("%v %v", "数据库名", reviewMSG.MSG)
-		reviewMSG.Sql = this.StmtNode.Text()
 		reviewMSG.Code = REVIEW_CODE_ERROR
 		return reviewMSG
 	}
@@ -27,7 +26,6 @@ func (this *CreateDatabaseReviewer) Review() *ReviewMSG {
 	reviewMSG = this.DetectDBNameReg()
 	if reviewMSG != nil {
 		reviewMSG.MSG = fmt.Sprintf("%v %v", "数据库名", reviewMSG.MSG)
-		reviewMSG.Sql = this.StmtNode.Text()
 		reviewMSG.Code = REVIEW_CODE_ERROR
 		return reviewMSG
 	}
@@ -35,7 +33,6 @@ func (this *CreateDatabaseReviewer) Review() *ReviewMSG {
 	// 检测创建数据库其他选项
 	reviewMSG = this.DetectDBOptions()
 	if reviewMSG != nil {
-		reviewMSG.Sql = this.StmtNode.Text()
 		reviewMSG.Code = REVIEW_CODE_ERROR
 		return reviewMSG
 	}
@@ -44,7 +41,6 @@ func (this *CreateDatabaseReviewer) Review() *ReviewMSG {
 	reviewMSG = new(ReviewMSG)
 	reviewMSG.Code = REVIEW_CODE_SUCCESS
 	reviewMSG.MSG = "审核成功"
-	reviewMSG.Sql = this.StmtNode.Text()
 
 	return reviewMSG
 }

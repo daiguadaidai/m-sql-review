@@ -52,7 +52,6 @@ func (this *CreateTableReviewer) Review() *ReviewMSG {
 	reviewMSG = this.DetectDBNameLength(this.StmtNode.Table.Schema.String())
 	if reviewMSG != nil {
 		reviewMSG.MSG = fmt.Sprintf("%v %v", "数据库名", reviewMSG.MSG)
-		reviewMSG.Sql = this.StmtNode.Text()
 		reviewMSG.Code = REVIEW_CODE_ERROR
 		return reviewMSG
 	}
@@ -61,7 +60,6 @@ func (this *CreateTableReviewer) Review() *ReviewMSG {
 	reviewMSG = this.DetectDBNameReg(this.StmtNode.Table.Schema.String())
 	if reviewMSG != nil {
 		reviewMSG.MSG = fmt.Sprintf("%v %v", "数据库名", reviewMSG.MSG)
-		reviewMSG.Sql = this.StmtNode.Text()
 		reviewMSG.Code = REVIEW_CODE_ERROR
 		return reviewMSG
 	}
@@ -70,7 +68,6 @@ func (this *CreateTableReviewer) Review() *ReviewMSG {
 	reviewMSG = this.DetectTableNameLength(this.StmtNode.Table.Name.String())
 	if reviewMSG != nil {
 		reviewMSG.MSG = fmt.Sprintf("%v %v", "表名", reviewMSG.MSG)
-		reviewMSG.Sql = this.StmtNode.Text()
 		reviewMSG.Code = REVIEW_CODE_ERROR
 		return reviewMSG
 	}
@@ -79,7 +76,6 @@ func (this *CreateTableReviewer) Review() *ReviewMSG {
 	reviewMSG = this.DetectTableNameReg(this.StmtNode.Table.Name.String())
 	if reviewMSG != nil {
 		reviewMSG.MSG = fmt.Sprintf("%v %v", "表名", reviewMSG.MSG)
-		reviewMSG.Sql = this.StmtNode.Text()
 		reviewMSG.Code = REVIEW_CODE_ERROR
 		return reviewMSG
 	}
@@ -87,7 +83,6 @@ func (this *CreateTableReviewer) Review() *ReviewMSG {
 	// 检测建表选项
 	reviewMSG = this.DetectTableOptions()
 	if reviewMSG != nil {
-		reviewMSG.Sql = this.StmtNode.Text()
 		reviewMSG.Code = REVIEW_CODE_ERROR
 		return reviewMSG
 	}
@@ -95,7 +90,6 @@ func (this *CreateTableReviewer) Review() *ReviewMSG {
 	// 检测表字段信息
 	reviewMSG = this.DetectColumns()
 	if reviewMSG != nil {
-		reviewMSG.Sql = this.StmtNode.Text()
 		reviewMSG.Code = REVIEW_CODE_ERROR
 		return reviewMSG
 	}
@@ -103,7 +97,6 @@ func (this *CreateTableReviewer) Review() *ReviewMSG {
 	// 检测字段中定义了多个主键, 这中定义是在字段定义后面添加 primary key, 而不是在添加索引中定义的
 	reviewMSG = this.DetectColumnPKReDefine()
 	if reviewMSG != nil {
-		reviewMSG.Sql = this.StmtNode.Text()
 		reviewMSG.Code = REVIEW_CODE_ERROR
 		return reviewMSG
 	}
@@ -111,7 +104,6 @@ func (this *CreateTableReviewer) Review() *ReviewMSG {
 	// 检测表的约束
 	reviewMSG = this.DetectConstraints()
 	if reviewMSG != nil {
-		reviewMSG.Sql = this.StmtNode.Text()
 		reviewMSG.Code = REVIEW_CODE_ERROR
 		return reviewMSG
 	}
@@ -119,7 +111,6 @@ func (this *CreateTableReviewer) Review() *ReviewMSG {
 	// 检测是否有主键
 	reviewMSG = this.DetectHasPK()
 	if reviewMSG != nil {
-		reviewMSG.Sql = this.StmtNode.Text()
 		reviewMSG.Code = REVIEW_CODE_ERROR
 		return reviewMSG
 	}
@@ -127,7 +118,6 @@ func (this *CreateTableReviewer) Review() *ReviewMSG {
 	// 检测主键是否有使用 auto increment
 	reviewMSG = this.DetectPKAutoIncrement()
 	if reviewMSG != nil {
-		reviewMSG.Sql = this.StmtNode.Text()
 		reviewMSG.Code = REVIEW_CODE_ERROR
 		return reviewMSG
 	}
@@ -135,7 +125,6 @@ func (this *CreateTableReviewer) Review() *ReviewMSG {
 	// 检测 字段 相关项
 	reviewMSG = this.DetectColumnOptions()
 	if reviewMSG != nil {
-		reviewMSG.Sql = this.StmtNode.Text()
 		reviewMSG.Code = REVIEW_CODE_ERROR
 		return reviewMSG
 	}
@@ -143,7 +132,6 @@ func (this *CreateTableReviewer) Review() *ReviewMSG {
 	// 检测Text字段类型使用个数是否超过限制
 	reviewMSG = this.DetectTextColumnTypeCount()
 	if reviewMSG != nil {
-		reviewMSG.Sql = this.StmtNode.Text()
 		reviewMSG.Code = REVIEW_CODE_ERROR
 		return reviewMSG
 	}
@@ -151,7 +139,6 @@ func (this *CreateTableReviewer) Review() *ReviewMSG {
 	// 检测Text字段类型使用个数是否超过限制
 	reviewMSG = this.DetectNeedIndexColumnName()
 	if reviewMSG != nil {
-		reviewMSG.Sql = this.StmtNode.Text()
 		reviewMSG.Code = REVIEW_CODE_ERROR
 		return reviewMSG
 	}
@@ -159,7 +146,6 @@ func (this *CreateTableReviewer) Review() *ReviewMSG {
 	// 检测必须要有的字段名
 	reviewMSG = this.DetectHaveColumnName()
 	if reviewMSG != nil {
-		reviewMSG.Sql = this.StmtNode.Text()
 		reviewMSG.Code = REVIEW_CODE_ERROR
 		return reviewMSG
 	}
@@ -167,7 +153,6 @@ func (this *CreateTableReviewer) Review() *ReviewMSG {
 	// 检测普通索引中不能有唯一索引联合在一起的字段
 	reviewMSG = this.DetectNormalIndexHaveUniqueIndex()
 	if reviewMSG != nil {
-		reviewMSG.Sql = this.StmtNode.Text()
 		reviewMSG.Code = REVIEW_CODE_ERROR
 		return reviewMSG
 	}
@@ -175,7 +160,6 @@ func (this *CreateTableReviewer) Review() *ReviewMSG {
 	// 检测分区表相关信息
 	reviewMSG = this.DetectPartition()
 	if reviewMSG != nil {
-		reviewMSG.Sql = this.StmtNode.Text()
 		reviewMSG.Code = REVIEW_CODE_ERROR
 		return reviewMSG
 	}
@@ -184,7 +168,6 @@ func (this *CreateTableReviewer) Review() *ReviewMSG {
 	reviewMSG = new(ReviewMSG)
 	reviewMSG.Code = REVIEW_CODE_SUCCESS
 	reviewMSG.MSG = "审核成功"
-	reviewMSG.Sql = this.StmtNode.Text()
 
 	return reviewMSG
 }

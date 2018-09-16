@@ -43,6 +43,9 @@ func StartReview(_sql string, _config *config.ReviewConfig) (string, error) {
 	for _, stmtNode := range stmtNodes {
 		review := reviewer.NewReviewer(stmtNode, reviewConfig)
 		reviewMSG := review.Review()
+		if reviewMSG != nil {
+			reviewMSG.Sql = stmtNode.Text()
+		}
 		reviewMSGs = append(reviewMSGs, reviewMSG)
 	}
 
