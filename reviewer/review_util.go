@@ -205,3 +205,19 @@ func GetIndexesHashColumn(_indexes map[string][]string) map[string]string {
 
 	return hashIndexes
 }
+
+/* 将一个数组的东西做hash
+Params:
+    _names: 需要转化的索引
+ */
+func GetHashNames(_names []string) []string {
+		hashIndex := make([]string, 0, 1)
+		for _, columnName := range _names {
+			data := []byte(columnName)
+			has := md5.Sum(data)
+			hashColumn := fmt.Sprintf("%x", has)
+			hashIndex = append(hashIndex, hashColumn)
+		}
+
+	return hashIndex
+}

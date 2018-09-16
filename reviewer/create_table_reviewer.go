@@ -13,7 +13,8 @@ type CreateTableReviewer struct {
 	StmtNode *ast.CreateTableStmt
 	ReviewConfig *config.ReviewConfig
 	ColumnNames map[string]bool
-	PKNames map[string]bool // 所有主键名
+	PKColumnNames map[string]bool // 所有主键列名
+	PKname string // 主键名
 	AutoIncrementName string  // 子增字段名
 	/* 定义所有索引
 	map {
@@ -27,18 +28,20 @@ type CreateTableReviewer struct {
 	NotNullColumnTypeMap map[string]bool // 必须为not null的字段类型
 	NotNullColumnNameMap map[string]bool // 必须为 not null的字段名称
 	ColumnTypeCount map[byte]int // 保存字段类型出现的个数
+	PartitionColumns []string
 }
 
 // 初始化一些变量
 func (this *CreateTableReviewer) Init() {
 	this.ColumnNames = make(map[string]bool)
-	this.PKNames = make(map[string]bool)
+	this.PKColumnNames = make(map[string]bool)
 	this.Indexes = make(map[string][]string)
 	this.UniqueIndexes = make(map[string][]string)
 	this.NotAllowColumnTypeMap = this.ReviewConfig.GetNotAllowColumnTypeMap()
 	this.NotNullColumnTypeMap = this.ReviewConfig.GetNotNullColumnTypeMap()
 	this.NotNullColumnNameMap = this.ReviewConfig.GetNotNullColumnNameMap()
 	this.ColumnTypeCount = make(map[byte]int)
+	this.PartitionColumns = make([]string, 0, 1)
 }
 
 func (this *CreateTableReviewer) Review() *ReviewMSG {
@@ -163,6 +166,14 @@ func (this *CreateTableReviewer) Review() *ReviewMSG {
 
 	// 检测普通索引中不能有唯一索引联合在一起的字段
 	reviewMSG = this.DetectNormalIndexHaveUniqueIndex()
+	if reviewMSG != nil {
+		reviewMSG.Sql = this.StmtNode.Text()
+		reviewMSG.Code = REVIEW_CODE_ERROR
+		return reviewMSG
+	}
+
+	// 检测分区表相关信息
+	reviewMSG = this.DetectPartition()
 	if reviewMSG != nil {
 		reviewMSG.Sql = this.StmtNode.Text()
 		reviewMSG.Code = REVIEW_CODE_ERROR
@@ -297,7 +308,7 @@ func (this *CreateTableReviewer) SetReviewPkInfo(_column *ast.ColumnDef) {
 	for _, option := range _column.Options {
 		switch option.Tp {
 		case ast.ColumnOptionPrimaryKey:
-			this.PKNames[_column.Name.String()] = true
+			this.PKColumnNames[_column.Name.String()] = true
 		case ast.ColumnOptionAutoIncrement:
 			this.AutoIncrementName = _column.Name.String()
 		}
@@ -308,9 +319,9 @@ func (this *CreateTableReviewer) SetReviewPkInfo(_column *ast.ColumnDef) {
 func (this *CreateTableReviewer) DetectColumnPKReDefine() *ReviewMSG {
 	var reviewMSG *ReviewMSG
 
-	if len(this.PKNames) > 1 {
+	if len(this.PKColumnNames) > 1 {
 		columnNames := make([]string, 0, 1)
-		for name, _ := range this.PKNames {
+		for name, _ := range this.PKColumnNames {
 			columnNames = append(columnNames, name)
 		}
 		reviewMSG = new(ReviewMSG)
@@ -326,7 +337,7 @@ func (this *CreateTableReviewer) DetectHasPK() *ReviewMSG {
 	var reviewMSG *ReviewMSG
 
 	if this.ReviewConfig.RuleNeedPK {
-		if len(this.PKNames) < 1 {
+		if len(this.PKColumnNames) < 1 {
 			reviewMSG = new(ReviewMSG)
 			reviewMSG.MSG = fmt.Sprintf("检测失败. 表: %v. 没有主键. %v",
 				this.StmtNode.Table.Name.String(), config.MSG_NEED_PK)
@@ -342,16 +353,16 @@ func (this *CreateTableReviewer) DetectPKAutoIncrement() *ReviewMSG {
 
 	if this.ReviewConfig.RulePKAutoIncrement {
 		// 有主键才检查主键中需要有 auto_increment 选项
-		if len(this.PKNames) > 0 { // 有主键字段
+		if len(this.PKColumnNames) > 0 { // 有主键字段
 			var pkHasAutoIncrement bool = false // 主键中是否有 auto_increment
 			if strings.Trim(this.AutoIncrementName, " ") != "" {
-				if _, ok := this.PKNames[this.AutoIncrementName]; ok {
+				if _, ok := this.PKColumnNames[this.AutoIncrementName]; ok {
 					pkHasAutoIncrement = true
 				}
 			}
 			if !pkHasAutoIncrement {
 				columnNames := make([]string, 0, 1)
-				for name, _ := range this.PKNames {
+				for name, _ := range this.PKColumnNames {
 					columnNames = append(columnNames, name)
 				}
 				reviewMSG = new(ReviewMSG)
@@ -421,6 +432,7 @@ func (this *CreateTableReviewer) DetectConstraints() *ReviewMSG {
 
 		switch constraint.Tp {
 		case ast.ConstraintPrimaryKey:
+			this.PKname = constraint.Name
 			reviewMSG = this.DectectConstraintPrimaryKey(constraint)
 			if reviewMSG != nil {
 				return reviewMSG
@@ -430,7 +442,7 @@ func (this *CreateTableReviewer) DetectConstraints() *ReviewMSG {
 			uniqueIndex := make([]string, 0, 1)
 			for _, pkName := range constraint.Keys {
 				uniqueIndex = append(uniqueIndex, pkName.Column.String())
-				this.PKNames[pkName.Column.String()] = true
+				this.PKColumnNames[pkName.Column.String()] = true
 			}
 			this.UniqueIndexes[constraint.Name] = uniqueIndex
 
@@ -480,7 +492,7 @@ func (this *CreateTableReviewer) DectectConstraintPrimaryKey(_constraint *ast.Co
 	var reviewMSG *ReviewMSG
 
 	// 检测在字段定义字句中和约束定义字句中是否有重复定义 主键
-	if len(this.PKNames) > 0 {
+	if len(this.PKColumnNames) > 0 {
 		reviewMSG = new(ReviewMSG)
 		reviewMSG.MSG = fmt.Sprintf("检测失败. 表: %v 主键有重复定义. ",
 			this.StmtNode.Table.Name.String())
@@ -583,7 +595,7 @@ func (this *CreateTableReviewer) DetectColumnOptions() *ReviewMSG {
 		}
 
 		// 4. 主键必须为not null
-		if _, ok := this.PKNames[column.Name.String()]; ok { // 该字段是主键
+		if _, ok := this.PKColumnNames[column.Name.String()]; ok { // 该字段是主键
 			if !isNotNull {
 				reviewMSG = new(ReviewMSG)
 				reviewMSG.MSG = fmt.Sprintf("检测失败. 主键必须定义为NOT NULL. 主键: %v", column.Name.String())
@@ -707,6 +719,91 @@ func (this *CreateTableReviewer) DetectNormalIndexHaveUniqueIndex() *ReviewMSG {
 				reviewMSG = new(ReviewMSG)
 				reviewMSG.MSG = fmt.Sprintf("检测失败. 普通索引: %v, 包含了唯一索引: %v 的字段.",
 					normalIndexName, uniqueIndexName)
+			}
+		}
+	}
+
+	return reviewMSG
+}
+
+// 检测分区表
+func (this *CreateTableReviewer) DetectPartition() *ReviewMSG {
+	var reviewMSG *ReviewMSG
+
+	if this.StmtNode.Partition != nil {
+		// 获取分区表字段
+		if len(this.StmtNode.Partition.ColumnNames) > 0 {
+			for _, columnName := range this.StmtNode.Partition.ColumnNames {
+				this.PartitionColumns = append(this.PartitionColumns, columnName.Name.String())
+			}
+		} else {
+			switch expr1 := this.StmtNode.Partition.Expr.(type) {
+			case *ast.ColumnNameExpr:
+				this.PartitionColumns = append(this.PartitionColumns, expr1.Name.String())
+			case *ast.FuncCallExpr:
+				for _, arg := range expr1.Args {
+					switch expr2 := arg.(type) {
+					case *ast.ColumnNameExpr:
+						this.PartitionColumns = append(this.PartitionColumns, expr2.Name.String())
+					default:
+						reviewMSG = new(ReviewMSG)
+						reviewMSG.MSG = fmt.Sprintf("接测分区表错误. 不能识别指定的分区字段类型, " +
+							"请联系DBA. 第二层: %T", this.StmtNode.Partition.Expr)
+						return reviewMSG
+					}
+				}
+			default:
+				reviewMSG = new(ReviewMSG)
+				reviewMSG.MSG = fmt.Sprintf("接测分区表错误. 不能识别指定的分区字段类型, " +
+					"请联系DBA. 第一层: %T", this.StmtNode.Partition.Expr)
+				return reviewMSG
+			}
+		}
+
+		// 没有发现 partition相关字段
+		if len(this.PartitionColumns) == 0 {
+			reviewMSG = new(ReviewMSG)
+			reviewMSG.MSG = fmt.Sprintf("检测失败. 表: %v. 是分区表, 却没有发现分区字段.",
+				this.StmtNode.Table.Name.String())
+			return reviewMSG
+		}
+
+		// 检测分区表中的字段必须包含在字段中
+		for _, partitionColumnName := range this.PartitionColumns {
+			if _, ok := this.ColumnNames[partitionColumnName]; !ok {
+				reviewMSG = new(ReviewMSG)
+				reviewMSG.MSG = fmt.Sprintf("检测失败. 表: %v. %v 分区字段没有定义",
+					this.StmtNode.Table.Name.String(), partitionColumnName)
+				return reviewMSG
+			}
+		}
+
+		// 所有的唯一键中必须包含所有的分区键
+		if len(this.UniqueIndexes) > 0 {
+			// 获取索引字段 hash 组合
+			hashUniqueIndexes := GetIndexesHashColumn(this.UniqueIndexes)
+			partitionHashNames := GetHashNames(this.PartitionColumns)
+			for uniqueIndexName, hashUniqueIndex := range hashUniqueIndexes {
+				if uniqueIndexName == this.PKname { // 过滤主键
+					continue
+				}
+				for _, partitionHashName := range partitionHashNames {
+					if !common.StrIsMatch(hashUniqueIndex, partitionHashName) {
+						reviewMSG = new(ReviewMSG)
+						reviewMSG.MSG = fmt.Sprintf("检测失败. 表: %v. 唯一索引: %v 没有包含分区字段: %v",
+							this.StmtNode.Table.Name.String(), uniqueIndexName, this.PartitionColumns)
+						return reviewMSG
+					}
+				}
+			}
+		} else { // 主键中需要包含分区的所有字段
+			for _, partitionColumnName := range this.PartitionColumns {
+				if _, ok := this.PKColumnNames[partitionColumnName]; !ok {
+					reviewMSG = new(ReviewMSG)
+					reviewMSG.MSG = fmt.Sprintf("检测失败. 表: %v. 主键没有包含分区字段: %v",
+						this.StmtNode.Table.Name.String(), partitionColumnName, this.PartitionColumns)
+					return reviewMSG
+				}
 			}
 		}
 	}
