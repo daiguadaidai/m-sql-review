@@ -133,4 +133,9 @@ func init() {
 		"该参数将不其作用")
 	rootCmd.Flags().StringVar(&runConfig.RuleNeedIndexColumnName, "rule-need-index-column-name",
 		config.RULE_NEED_INDEX_COLUMN_NAME, "必须要有索引的字段名, 默认(多个用逗号隔开)")
+	rootCmd.Flags().BoolVar(&runConfig.RuleNeedDefaultValue, "rule-need-default-value",
+		config.RULE_NEED_DEFAULT_VALUE,
+		fmt.Sprintf("是否需要有默认字段. 默认: %v", config.RULE_NEED_DEFAULT_VALUE))
+	rootCmd.Flags().StringVar(&runConfig.RuleNeedDefaultValueName, "rule-need-default-value-name",
+		config.RULE_NEED_DEFAULT_VALUE_NAME, "必须要有默认值的字段名, 默认(多个用逗号隔开)")
 }

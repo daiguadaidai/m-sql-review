@@ -21,14 +21,16 @@ CREATE TABLE test.mf_fd_cache (
   isCodeShare tinyint(1) Comment '注释',
   tax int(11) NOT NULL DEFAULT '0' Comment '注释',
   yq int(11) NOT NULL DEFAULT '0' Comment '注释',
-  cabin char(2) NOT NULL DEFAULT '' Comment '注释',
+  cabin char(2) NOT NULL default '' Comment '注释',
   ibe_price int(11) NOT NULL DEFAULT '0' Comment '注释',
   ctrip_price int(11) NOT NULL DEFAULT '0' Comment '注释',
   official_price int(11) NOT NULL DEFAULT '0' Comment '注释',
   uptime datetime NOT NULL DEFAULT '1000-10-10 10:10:10' Comment '注释',
+  created_at datetime NOT NULL Comment '注释',
   PRIMARY KEY (id),
   UNIQUE KEY udx_uid (dep, arr, flightNo, flightDate, cabin),
   Index idx_uptime (uptime),
+  Index idx_created_at (created_at),
   KEY idx_flight (dep,arr),
   KEY idx_flightdate (flightDate)
 ) ENGINE=InnoDb  DEFAULT CHARSET=utF8 COLLATE=Utf8mb4_general_ci comment="你号";

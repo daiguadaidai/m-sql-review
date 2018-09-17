@@ -1,6 +1,9 @@
 package config
 
-import "strings"
+import (
+	"strings"
+	"github.com/daiguadaidai/m-sql-review/common"
+)
 
 type ReviewConfig struct {
 	// 通用名字长度
@@ -55,6 +58,10 @@ type ReviewConfig struct {
 	RuleNeedIndexColumnName string
 	// 必须包含的字段名
 	RuleHaveColumnName string
+	// 字段定义必须要有默认值
+	RuleNeedDefaultValue bool
+	// 必须有默认值的字段名字
+	RuleNeedDefaultValueName string
 }
 
 func NewReviewConfig() *ReviewConfig {
@@ -86,6 +93,8 @@ func NewReviewConfig() *ReviewConfig {
 	reviewConfig.RuleTextTypeColumnCount = RULE_TEXT_TYPE_COLUMN_COUNT
 	reviewConfig.RuleNeedIndexColumnName = RULE_NEED_INDEX_COLUMN_NAME
 	reviewConfig.RuleHaveColumnName = RULE_HAVE_COLUMN_NAME
+	reviewConfig.RuleNeedDefaultValue = RULE_NEED_DEFAULT_VALUE
+	reviewConfig.RuleNeedDefaultValueName = RULE_NEED_DEFAULT_VALUE_NAME
 
 	return reviewConfig
 }
@@ -148,52 +157,21 @@ func (this *ReviewConfig) GetNotNullColumnTypeMap() map[string]bool {
 
 // 将必须为not null的字段名规则进行(逗号)分割, 保存到map中
 func (this *ReviewConfig) GetNotNullColumnNameMap() map[string]bool {
-	notNullColumnNameMap := make(map[string]bool)
-
-	notNullColumnNames := strings.Split(this.RuleNotNullColumnName, ",")
-	for _, notNullColumnName := range notNullColumnNames {
-		notNullColumnName = strings.ToLower(strings.TrimSpace(notNullColumnName))
-		if notNullColumnName == "" {
-			continue
-		}
-
-		notNullColumnNameMap[notNullColumnName] = true
-	}
-
-	return notNullColumnNameMap
+	return common.SplitString2Map(this.RuleNotNullColumnName, ",")
 }
 
 // 获取必须要有索引的字段
 func (this *ReviewConfig) GetNeedIndexColumnNameMap() map[string]bool {
-	needIndexColumnNameMap := make(map[string]bool)
-
-	needIndexColumnNames := strings.Split(this.RuleNeedIndexColumnName, ",")
-	for _, needIndexColumnName := range needIndexColumnNames {
-		needIndexColumnName = strings.ToLower(strings.TrimSpace(needIndexColumnName))
-		if needIndexColumnName == "" {
-			continue
-		}
-
-		needIndexColumnNameMap[needIndexColumnName] = true
-	}
-
-	return needIndexColumnNameMap
+	return common.SplitString2Map(this.RuleNeedIndexColumnName, ",")
 }
 
 // 获取必须要有的字段名
 func (this *ReviewConfig) GetHaveColumnNameMap() map[string]bool {
-	haveColumnNameMap := make(map[string]bool)
+	return common.SplitString2Map(this.RuleHaveColumnName, ",")
+}
 
-	haveColumnNames := strings.Split(this.RuleHaveColumnName, ",")
-	for _, haveColumnName := range haveColumnNames {
-		haveColumnName = strings.ToLower(strings.TrimSpace(haveColumnName))
-		if haveColumnName == "" {
-			continue
-		}
-
-		haveColumnNameMap[haveColumnName] = true
-	}
-
-	return haveColumnNameMap
+// 获取必须要有默认值的字段
+func (this *ReviewConfig) GetNeedDefaultValueNameMap() map[string]bool {
+	return common.SplitString2Map(this.RuleNeedDefaultValueName, ",")
 }
 

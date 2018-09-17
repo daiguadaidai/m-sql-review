@@ -29,6 +29,7 @@ type CreateTableReviewer struct {
 	NotNullColumnNameMap map[string]bool // 必须为 not null的字段名称
 	ColumnTypeCount map[byte]int // 保存字段类型出现的个数
 	PartitionColumns []string
+	NeedDefaultValueNameMap map[string]bool // 必须要有默认值的字段名
 }
 
 // 初始化一些变量
@@ -42,6 +43,7 @@ func (this *CreateTableReviewer) Init() {
 	this.NotNullColumnNameMap = this.ReviewConfig.GetNotNullColumnNameMap()
 	this.ColumnTypeCount = make(map[byte]int)
 	this.PartitionColumns = make([]string, 0, 1)
+	this.NeedDefaultValueNameMap = this.ReviewConfig.GetNeedDefaultValueNameMap()
 }
 
 func (this *CreateTableReviewer) Review() *ReviewMSG {
@@ -530,7 +532,7 @@ func (this *CreateTableReviewer) DetectColumnOptions() *ReviewMSG {
 
 	for _, column := range this.StmtNode.Cols {
 		var isNotNull bool = false // 该字段是否为 not null
-		// var hasDefaultValue bool = false // 是否有默认值
+		var hasDefaultValue bool = false // 是否有默认值
 		var hasColumnComment bool = false // 用于检测字段的注释是否指定
 
 		// 获取字段是否 not null, 是否有默认值
@@ -540,7 +542,7 @@ func (this *CreateTableReviewer) DetectColumnOptions() *ReviewMSG {
 			case ast.ColumnOptionNotNull:
 				isNotNull = true
 			case ast.ColumnOptionDefaultValue:
-				// hasDefaultValue = true
+				hasDefaultValue = true
 			case ast.ColumnOptionComment:
 				if strings.Trim(option.Expr.GetValue().(string), " ") != "" {
 					hasColumnComment = true
@@ -604,6 +606,25 @@ func (this *CreateTableReviewer) DetectColumnOptions() *ReviewMSG {
 				reviewMSG.MSG = fmt.Sprintf("检测失败.字段: %v 必须为NOT NULL. %v. ",
 					column.Name.String(),
 					fmt.Sprintf(config.MSG_NOT_NULL_COLUMN_NAME_ERROR, this.ReviewConfig.RuleNotNullColumnName))
+				return reviewMSG
+			}
+		}
+
+		// 7. 必须有默认值
+		if this.ReviewConfig.RuleNeedDefaultValue && !hasDefaultValue {
+			reviewMSG = new(ReviewMSG)
+			reviewMSG.MSG = fmt.Sprintf("检测失败.字段: %v %v. ",
+				column.Name.String(), config.MSG_NEED_DEFAULT_VALUE_ERROR)
+			return reviewMSG
+		}
+
+		// 8. 必须要有默认值的字段
+		if _, ok := this.NeedDefaultValueNameMap[strings.ToLower(column.Name.String())]; ok {
+			if !hasDefaultValue {
+				reviewMSG = new(ReviewMSG)
+				reviewMSG.MSG = fmt.Sprintf("检测失败.字段: %v 必须要有默认值. %v. ",
+					column.Name.String(),
+					fmt.Sprintf(config.MSG_NEED_INDEX_COLUMN_NAME_ERROR, this.ReviewConfig.RuleNeedDefaultValueName))
 				return reviewMSG
 			}
 		}

@@ -56,4 +56,8 @@ const (
 	MSG_NEED_INDEX_COLUMN_NAME_ERROR = "必须指定索引的字段名有: %v"
 	// 必须有的字段名
 	MSG_HAVE_COLUMN_NAME_ERROR = "必须包含的字段名有: %v"
+	// 必须要有默认值
+	MSG_NEED_DEFAULT_VALUE_ERROR = "字段定义必须要有默认值"
+	// 必须要有默认值的字段名
+	MSG_NEED_DEFAULT_VALUE_NAME_ERROR = "必须包含默认值的字段名有: %v"
 )

@@ -53,4 +53,8 @@ const (
 	RULE_NEED_INDEX_COLUMN_NAME = "created_at,updated_at,create_time,update_time,create_at,update_at,created_time,updated_time"
 	// 必须有的字段名
 	RULE_HAVE_COLUMN_NAME = ""
+	// 是否要有默认值
+	RULE_NEED_DEFAULT_VALUE = false
+	// 必须要有默认值的字段名
+	RULE_NEED_DEFAULT_VALUE_NAME = "created_at,updated_at,create_time,update_time,create_at,update_at,created_time,updated_time"
 )
