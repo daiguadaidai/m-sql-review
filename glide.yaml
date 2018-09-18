@@ -1,14 +1,5 @@
 package: github.com/daiguadaidai/m-sql-review
 import:
-- package: github.com/BurntSushi/toml
-  version: v0.3.0
-- package: github.com/coreos/etcd
-  version: v3.3.9
-  subpackages:
-  - clientv3
-  - clientv3/concurrency
-  - etcdserver/api/v3rpc/rpctypes
-  - mvcc/mvccpb
 - package: github.com/cznic/mathutil
 - package: github.com/cznic/parser
   subpackages:
@@ -16,62 +7,18 @@ import:
 - package: github.com/cznic/sortutil
 - package: github.com/cznic/strutil
 - package: github.com/cznic/y
-- package: github.com/golang/protobuf
-  version: v1.2.0
-  subpackages:
-  - proto
-- package: github.com/google/btree
-- package: github.com/grpc-ecosystem/go-grpc-middleware
-  version: v1.0.0
-  subpackages:
-  - tracing/opentracing
-- package: github.com/grpc-ecosystem/go-grpc-prometheus
-  version: v1.2.0
+- package: github.com/dlclark/regexp2
+- package: github.com/go-sql-driver/mysql
 - package: github.com/juju/errors
-- package: github.com/ngaut/pools
-- package: github.com/opentracing/basictracer-go
-  version: v1.0.0
-- package: github.com/opentracing/opentracing-go
-  version: v1.0.2
+- package: github.com/outbrain/golib
+  subpackages:
+  - log
 - package: github.com/pingcap/check
-- package: github.com/pingcap/goleveldb
-  subpackages:
-  - leveldb
-  - leveldb/comparer
-  - leveldb/iterator
-  - leveldb/memdb
-  - leveldb/opt
-  - leveldb/storage
-  - leveldb/util
-- package: github.com/pingcap/kvproto
-  subpackages:
-  - pkg/coprocessor
-  - pkg/errorpb
-  - pkg/kvrpcpb
-  - pkg/metapb
-  - pkg/tikvpb
-- package: github.com/pingcap/pd
-  version: v2.1.0-rc.1
-  subpackages:
-  - pd-client
 - package: github.com/pingcap/tipb
   subpackages:
-  - go-binlog
   - go-tipb
-- package: github.com/prometheus/client_golang
-  version: v0.9.0-pre1
-  subpackages:
-  - prometheus
 - package: github.com/sirupsen/logrus
-  version: v1.0.6
-- package: github.com/spaolacci/murmur3
-  version: v1.1
-- package: github.com/twinj/uuid
-  version: v1.0.0
-- package: github.com/uber/jaeger-client-go
-  version: v2.14.0
-  subpackages:
-  - config
+- package: github.com/spf13/cobra
 - package: golang.org/x/net
   repo: https://github.com/golang/net
   vcs: git
@@ -88,22 +35,21 @@ import:
   - encoding/simplifiedchinese
   - encoding/traditionalchinese
   - encoding/unicode
-- package: google.golang.org/grpc
-  repo: https://github.com/grpc/grpc-go
+- package: golang.org/x/sys
+  repo: https://github.com/golang/sys
   vcs: git
   subpackages:
-  - codes
-  - credentials
-  - keepalive
-  - metadata
-- package: google.golang.org/genproto
-  repo: https://github.com/google/go-genproto
+  - unix
+- package: golang.org/x/crypto
+  repo: https://github.com/golang/crypto
+  vcs: git
+  subpackages:
+  - ssh/terminal
 - package: gopkg.in/natefinch/lumberjack.v2
   version: v2.1
   repo: https://github.com/natefinch/lumberjack
-- package: github.com/dlclark/regexp2
-  version: v1.1.6
-testImport:
-- package: github.com/etcd-io/gofail
+- package: google.golang.org/appengine
+  repo: https://github.com/golang/appengine
+  vcs: git
   subpackages:
-  - runtime
+  - cloudsql
