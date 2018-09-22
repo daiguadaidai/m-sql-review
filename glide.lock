@@ -1,6 +1,13 @@
 hash: 6a4a96dff957248c71dd55bb1c10cab6106ad85b3b730dc87b5eea0d65f69609
-updated: 2018-09-18T21:43:29.437101661+08:00
+updated: 2018-09-22T16:04:40.035571212+08:00
 imports:
+- name: github.com/cihub/seelog
+  version: f561c5e57575bb1e0a2167028b7339b3a8d16fb4
+  subpackages:
+  - archive
+  - archive/gzip
+  - archive/tar
+  - archive/zip
 - name: github.com/cznic/golex
   version: 4ab7c5e190e49208c823ce8ec803aa39e6a4b31a
   subpackages:
@@ -27,6 +34,8 @@ imports:
   version: aa810b61a9c79d51363740d207bb46cf8e620ed5
   subpackages:
   - proto
+- name: github.com/gorilla/schema
+  version: e0e4b92809ac79a1a465c2f626c34b121e0916bd
 - name: github.com/inconshreveable/mousetrap
   version: 76626ae9c91c4f2a10f34cad8ce83ea42c93bb75
 - name: github.com/juju/errors
@@ -85,7 +94,7 @@ imports:
   - runes
   - transform
 - name: google.golang.org/appengine
-  version: 03cac3b07182cfb08c0d0c0b6ee72a1ceb151c92
+  version: ae0ab99deb4dc413a2b4bd6c8bdd0eb67f1e4d06
   repo: https://github.com/golang/appengine
   vcs: git
   subpackages:

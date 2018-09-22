@@ -7,11 +7,17 @@ import (
 	"github.com/daiguadaidai/m-sql-review/config"
 	"github.com/daiguadaidai/m-sql-review/ast"
 	"github.com/daiguadaidai/m-sql-review/dependency/mysql"
+	"github.com/daiguadaidai/m-sql-review/dao"
 )
 
 func TestCreateTableReviewer_Review(t *testing.T) {
+	var host string = "10.10.10.12"
+	var port int = 3306
+	var username string = "HH"
+	var password string = "oracle"
+	var database string = "test"
 	sql := `
-CREATE TABLE test.mf_fd_cache (
+CREATE TABLE test.t1 (
   id bigint(18) NOT NULL AUTO_INCREMENT COMMENT '主键',
   dep varchar(3) NOT NULL DEFAULT '' Comment '注释',
   arr varchar(3) NOT NULL DEFAULT '' Comment '注释',
@@ -26,11 +32,9 @@ CREATE TABLE test.mf_fd_cache (
   ctrip_price int(11) NOT NULL DEFAULT '0' Comment '注释',
   official_price int(11) NOT NULL DEFAULT '0' Comment '注释',
   uptime datetime NOT NULL DEFAULT '1000-10-10 10:10:10' Comment '注释',
-  created_at datetime NOT NULL Comment '注释',
   PRIMARY KEY (id),
   UNIQUE KEY udx_uid (dep, arr, flightNo, flightDate, cabin),
   Index idx_uptime (uptime),
-  Index idx_created_at (created_at),
   KEY idx_flight (dep,arr),
   KEY idx_flightdate (flightDate)
 ) ENGINE=InnoDb  DEFAULT CHARSET=utF8 COLLATE=Utf8mb4_general_ci comment="你号";
@@ -43,6 +47,7 @@ CREATE TABLE test.mf_fd_cache (
 	}
 
 	// 循环每一个sql语句进行解析, 并且生成相关审核信息
+	dbConfig := config.NewDBConfig(host, port, username ,password, database)
 	reviewConfig := config.NewReviewConfig()
 	reviewMSGs := make([]*ReviewMSG, 0, 1)
 	for _, stmtNode := range stmtNodes {
@@ -112,9 +117,7 @@ CREATE TABLE test.mf_fd_cache (
 			fmt.Println("column Name:", column.Name.String(), optionTypes)
 		}
 
-
-
-		review := NewReviewer(stmtNode, reviewConfig)
+		review := NewReviewer(stmtNode, reviewConfig, dbConfig)
 		reviewMSG := review.Review()
 		reviewMSGs = append(reviewMSGs, reviewMSG)
 	}
@@ -284,6 +287,10 @@ PARTITION p201303172 VALUES LESS THAN ('2013-03-17')
 
 
 func TestCreateTableReviewer_Review_Partition(t *testing.T) {
+	var host string = "10.10.10.12"
+	var port int = 3306
+	var username string = "HH"
+	var password string = "oracle"
 	sql := `
 CREATE TABLE test.mf_fd_cache (
   id bigint(18) NOT NULL AUTO_INCREMENT COMMENT '注释',
@@ -325,6 +332,7 @@ PARTITION BY RANGE(TO_DAYS (uptime1))
 	}
 
 	// 循环每一个sql语句进行解析, 并且生成相关审核信息
+	dbConfig := dao.NewDBConfig(host, port, username ,password, "")
 	reviewConfig := config.NewReviewConfig()
 	reviewMSGs := make([]*ReviewMSG, 0, 1)
 	for _, stmtNode := range stmtNodes {
@@ -396,7 +404,7 @@ PARTITION BY RANGE(TO_DAYS (uptime1))
 
 
 
-		review := NewReviewer(stmtNode, reviewConfig)
+		review := NewReviewer(stmtNode, reviewConfig, dbConfig)
 		reviewMSG := review.Review()
 		reviewMSGs = append(reviewMSGs, reviewMSG)
 	}

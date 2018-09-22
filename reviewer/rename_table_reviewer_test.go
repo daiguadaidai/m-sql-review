@@ -9,8 +9,13 @@ import (
 )
 
 func TestRenameTableReviewer_Review(t *testing.T) {
+	var host string = "10.10.10.12"
+	var port int = 3306
+	var username string = "HH"
+	var password string = "oracle"
+
 	sql := `
-		rename table test.1table to test1.t1, t2 to tt2;
+		rename table test.table to test1.t1, t2 to tt2;
     `
 
 	sqlParser := parser.New()
@@ -21,6 +26,7 @@ func TestRenameTableReviewer_Review(t *testing.T) {
 
 
 	// 循环每一个sql语句进行解析, 并且生成相关审核信息
+	dbConfig := config.NewDBConfig(host, port, username ,password, "")
 	reviewMSGs := make([]*ReviewMSG, 0, 1)
 	reviewConfig := config.NewReviewConfig()
 	for _, stmtNode := range stmtNodes {
@@ -34,7 +40,7 @@ func TestRenameTableReviewer_Review(t *testing.T) {
 			)
 		}
 
-		review := NewReviewer(stmtNode, reviewConfig)
+		review := NewReviewer(stmtNode, reviewConfig, dbConfig)
 		reviewMSG := review.Review()
 		reviewMSGs = append(reviewMSGs, reviewMSG)
 	}

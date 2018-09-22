@@ -5,13 +5,15 @@ import (
 	"fmt"
 	"github.com/daiguadaidai/m-sql-review/config"
 	"strings"
-	"github.com/pingcap/tidb/mysql"
+	"github.com/daiguadaidai/m-sql-review/dependency/mysql"
 	"github.com/daiguadaidai/m-sql-review/common"
+	"github.com/daiguadaidai/m-sql-review/dao"
 )
 
 type CreateTableReviewer struct {
 	StmtNode *ast.CreateTableStmt
 	ReviewConfig *config.ReviewConfig
+	DBConfig *config.DBConfig
 	ColumnNames map[string]bool
 	PKColumnNames map[string]bool // 所有主键列名
 	PKname string // 主键名
@@ -163,6 +165,12 @@ func (this *CreateTableReviewer) Review() *ReviewMSG {
 	reviewMSG = this.DetectPartition()
 	if reviewMSG != nil {
 		reviewMSG.Code = REVIEW_CODE_ERROR
+		return reviewMSG
+	}
+
+	// 链接实例检测表相关信息
+	reviewMSG = this.DetectInstanceTable()
+	if reviewMSG != nil {
 		return reviewMSG
 	}
 
@@ -630,7 +638,6 @@ func (this *CreateTableReviewer) DetectColumnOptions() *ReviewMSG {
 		}
 	}
 
-
 	return reviewMSG
 }
 
@@ -812,5 +819,34 @@ func (this *CreateTableReviewer) DetectPartition() *ReviewMSG {
 		}
 	}
 
+	return reviewMSG
+}
+
+// 链接指定实例检测相关表信息
+func (this *CreateTableReviewer) DetectInstanceTable() *ReviewMSG {
+	var reviewMSG *ReviewMSG
+
+	tableInfo := dao.NewTableInfo(this.DBConfig, this.StmtNode.Table.Name.String())
+	err := tableInfo.OpenInstance()
+	if err != nil {
+		reviewMSG = new(ReviewMSG)
+		reviewMSG.Code = REVIEW_CODE_WARNING
+		reviewMSG.MSG = fmt.Sprintf("警告: 无法链接到指定实例. 无法检测数据库是否存在.")
+		return reviewMSG
+	}
+
+	// 检测表是否存在
+	reviewMSG = DetectTableExists(tableInfo)
+	if reviewMSG != nil {
+		return reviewMSG
+	}
+
+	err = tableInfo.CloseInstance()
+	if err != nil {
+		reviewMSG = new(ReviewMSG)
+		reviewMSG.Code = REVIEW_CODE_WARNING
+		reviewMSG.MSG = fmt.Sprintf("警告: 链接实例检测表相关信息. 关闭连接出错.")
+		return reviewMSG
+	}
 	return reviewMSG
 }

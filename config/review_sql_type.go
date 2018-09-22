@@ -3,7 +3,7 @@ package config
 import (
 	"sync"
 	"github.com/daiguadaidai/m-sql-review/dependency/mysql"
-	"github.com/outbrain/golib/log"
+	log "github.com/cihub/seelog"
 )
 
 const (

@@ -4,15 +4,24 @@ import (
 	"github.com/daiguadaidai/m-sql-review/ast"
 	"fmt"
 	"github.com/daiguadaidai/m-sql-review/config"
+	"github.com/daiguadaidai/m-sql-review/dao"
 )
 
 type CreateDatabaseReviewer struct {
 	StmtNode *ast.CreateDatabaseStmt
 	ReviewConfig *config.ReviewConfig
+	DBConfig *config.DBConfig
 }
 
 func (this *CreateDatabaseReviewer) Review() *ReviewMSG {
 	var reviewMSG *ReviewMSG
+
+	if !this.ReviewConfig.RuleAllowCreateDatabase {
+		reviewMSG = new(ReviewMSG)
+		reviewMSG.MSG = fmt.Sprintf("不允许创建数据库: %v", this.StmtNode.Name)
+		reviewMSG.Code = REVIEW_CODE_ERROR
+		return reviewMSG
+	}
 
 	// 检测名称长度
 	reviewMSG = this.DetectDBNameLength()
@@ -34,6 +43,12 @@ func (this *CreateDatabaseReviewer) Review() *ReviewMSG {
 	reviewMSG = this.DetectDBOptions()
 	if reviewMSG != nil {
 		reviewMSG.Code = REVIEW_CODE_ERROR
+		return reviewMSG
+	}
+
+	// 检测需要创建的数据库是否在目标实例中已经有
+	reviewMSG = this.DetectInstanceDatabase()
+	if reviewMSG != nil {
 		return reviewMSG
 	}
 
@@ -73,5 +88,34 @@ func (this *CreateDatabaseReviewer) DetectDBOptions() *ReviewMSG {
 		}
 	}
 
+	return reviewMSG
+}
+
+// 链接到实例检测相关信息
+func (this *CreateDatabaseReviewer) DetectInstanceDatabase() *ReviewMSG {
+	var reviewMSG *ReviewMSG
+
+	tableInfo := dao.NewTableInfo(this.DBConfig, "")
+	tableInfo.DBName = this.StmtNode.Name
+	err := tableInfo.OpenInstance()
+	if err != nil {
+		reviewMSG = new(ReviewMSG)
+		reviewMSG.Code = REVIEW_CODE_WARNING
+		reviewMSG.MSG = fmt.Sprintf("警告: 无法链接到指定实例. 无法检测数据库是否存在. %v", err)
+		return reviewMSG
+	}
+
+	reviewMSG = DetectDatabaseExists(tableInfo)
+	if reviewMSG != nil {
+		return reviewMSG
+	}
+
+	err = tableInfo.CloseInstance()
+	if err != nil {
+		reviewMSG = new(ReviewMSG)
+		reviewMSG.Code = REVIEW_CODE_WARNING
+		reviewMSG.MSG = fmt.Sprintf("警告: 链接实例检测数据库相关信息. 关闭连接出错. %v", err)
+		return reviewMSG
+	}
 	return reviewMSG
 }

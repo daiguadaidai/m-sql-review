@@ -5,6 +5,8 @@ import (
 	"github.com/daiguadaidai/m-sql-review/common"
 )
 
+var reviewConfig *ReviewConfig
+
 type ReviewConfig struct {
 	// 通用名字长度
 	RuleNameLength int
@@ -14,6 +16,8 @@ type ReviewConfig struct {
 	RuleCharSet string
 	// 通用 COLLATE
 	RuleCollate string
+	// 是否允许创建数据库
+	RuleAllowCreateDatabase bool
 	// 是否允许删除数据库
 	RuleAllowDropDatabase bool
 	// 是否允许删除表
@@ -65,38 +69,55 @@ type ReviewConfig struct {
 }
 
 func NewReviewConfig() *ReviewConfig {
-	reviewConfig := new(ReviewConfig)
+	rc := new(ReviewConfig)
 
-	reviewConfig.RuleNameLength = RULE_NAME_LENGTH
-	reviewConfig.RuleNameReg = RULE_NAME_REG
-	reviewConfig.RuleCharSet = RULE_CHARSET
-	reviewConfig.RuleCollate = RULE_COLLATE
-	reviewConfig.RuleAllowDropDatabase = RULE_ALLOW_DROP_DATABASE
-	reviewConfig.RuleAllowDropTable = RULE_ALLOW_DROP_TABLE
-	reviewConfig.RuleAllowRenameTable = RULE_ALLOW_RENAME_TABLE
-	reviewConfig.RuleAllowTruncateTable = RULE_ALLOW_TRUNCATE_TABLE
-	reviewConfig.RuleTableEngine = RULE_TABLE_ENGINE
-	reviewConfig.RuleNotAllowColumnType = RULE_NOT_ALLOW_COLUMN_TYPE
-	reviewConfig.RuleNeedTableComment = RULE_NEED_TABLE_COMMENT
-	reviewConfig.RuleNeedColumnComment = RULE_NEED_COLUMN_COMMENT
-	reviewConfig.RulePKAutoIncrement = RULE_PK_AUTO_INCREMENT
-	reviewConfig.RuleNeedPK = RULE_NEED_PK
-	reviewConfig.RuleIndexColumnCount = RULE_INDEX_COLUMN_COUNT
-	reviewConfig.RuleTableNameReg = RULE_TABLE_NAME_GRE
-	reviewConfig.RuleIndexNameReg = RULE_INDEX_NAME_REG
-	reviewConfig.RuleUniqueIndexNameReg = RULE_UNIQUE_INDEX_NAME_REG
-	reviewConfig.RuleAllColumnNotNull = RULE_ALL_COLUMN_NOT_NULL
-	reviewConfig.RuleAllowForeignKey = RULE_ALLOW_FOREIGN_KEY
-	reviewConfig.RuleAllowFullText = RULE_ALLOW_FULL_TEXT
-	reviewConfig.RuleNotNullColumnType = RULE_NOT_NULL_COLUMN_TYPE
-	reviewConfig.RuleNotNullColumnName = RULE_NOT_NULL_COLUMN_NAME
-	reviewConfig.RuleTextTypeColumnCount = RULE_TEXT_TYPE_COLUMN_COUNT
-	reviewConfig.RuleNeedIndexColumnName = RULE_NEED_INDEX_COLUMN_NAME
-	reviewConfig.RuleHaveColumnName = RULE_HAVE_COLUMN_NAME
-	reviewConfig.RuleNeedDefaultValue = RULE_NEED_DEFAULT_VALUE
-	reviewConfig.RuleNeedDefaultValueName = RULE_NEED_DEFAULT_VALUE_NAME
+	rc.RuleNameLength = RULE_NAME_LENGTH
+	rc.RuleNameReg = RULE_NAME_REG
+	rc.RuleCharSet = RULE_CHARSET
+	rc.RuleCollate = RULE_COLLATE
+	rc.RuleAllowCreateDatabase = RULE_ALLOW_CREATE_DATABASE
+	rc.RuleAllowDropDatabase = RULE_ALLOW_DROP_DATABASE
+	rc.RuleAllowDropTable = RULE_ALLOW_DROP_TABLE
+	rc.RuleAllowRenameTable = RULE_ALLOW_RENAME_TABLE
+	rc.RuleAllowTruncateTable = RULE_ALLOW_TRUNCATE_TABLE
+	rc.RuleTableEngine = RULE_TABLE_ENGINE
+	rc.RuleNotAllowColumnType = RULE_NOT_ALLOW_COLUMN_TYPE
+	rc.RuleNeedTableComment = RULE_NEED_TABLE_COMMENT
+	rc.RuleNeedColumnComment = RULE_NEED_COLUMN_COMMENT
+	rc.RulePKAutoIncrement = RULE_PK_AUTO_INCREMENT
+	rc.RuleNeedPK = RULE_NEED_PK
+	rc.RuleIndexColumnCount = RULE_INDEX_COLUMN_COUNT
+	rc.RuleTableNameReg = RULE_TABLE_NAME_GRE
+	rc.RuleIndexNameReg = RULE_INDEX_NAME_REG
+	rc.RuleUniqueIndexNameReg = RULE_UNIQUE_INDEX_NAME_REG
+	rc.RuleAllColumnNotNull = RULE_ALL_COLUMN_NOT_NULL
+	rc.RuleAllowForeignKey = RULE_ALLOW_FOREIGN_KEY
+	rc.RuleAllowFullText = RULE_ALLOW_FULL_TEXT
+	rc.RuleNotNullColumnType = RULE_NOT_NULL_COLUMN_TYPE
+	rc.RuleNotNullColumnName = RULE_NOT_NULL_COLUMN_NAME
+	rc.RuleTextTypeColumnCount = RULE_TEXT_TYPE_COLUMN_COUNT
+	rc.RuleNeedIndexColumnName = RULE_NEED_INDEX_COLUMN_NAME
+	rc.RuleHaveColumnName = RULE_HAVE_COLUMN_NAME
+	rc.RuleNeedDefaultValue = RULE_NEED_DEFAULT_VALUE
+	rc.RuleNeedDefaultValueName = RULE_NEED_DEFAULT_VALUE_NAME
 
-	return reviewConfig
+	return rc
+}
+
+/* 设置全局的 reviewconfig
+Params:
+	_reviewConfig: sql审核配置
+ */
+func SetReviewConfig(_reviewConfig *ReviewConfig) {
+	reviewConfig = _reviewConfig
+}
+
+// 获取一个Copy的reviewConfig
+func GetReviewConfig() *ReviewConfig {
+	rc := new(ReviewConfig)
+	common.StructCopy(reviewConfig, rc)
+
+	return rc
 }
 
 // 获取不允许的字段类型映射

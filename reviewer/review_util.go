@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"github.com/dlclark/regexp2"
 	"crypto/md5"
+	"github.com/daiguadaidai/m-sql-review/dao"
 )
 
 /* 检测名称长度是否合法
@@ -220,4 +221,159 @@ func GetHashNames(_names []string) []string {
 		}
 
 	return hashIndex
+}
+
+/* 检测数据库是否存在
+Params:
+    _tableInfo: 表相关信息
+ */
+func DetectDatabaseExists(_tableInfo *dao.TableInfo) *ReviewMSG {
+	var reviewMSG *ReviewMSG
+
+	// 检测实例中数据库是否存在
+	exists, err := _tableInfo.DatabaseExists()
+	if err != nil {
+		reviewMSG = new(ReviewMSG)
+		reviewMSG.Code = REVIEW_CODE_WARNING
+		reviewMSG.MSG = fmt.Sprintf("警告: 检测目标实例的数据库是否存在出错. %v", err)
+		return reviewMSG
+	}
+	if exists {
+		reviewMSG = new(ReviewMSG)
+		reviewMSG.Code = REVIEW_CODE_ERROR
+		reviewMSG.MSG = fmt.Sprintf("检测失败: 目标数据库[%v]已经存在.",
+			_tableInfo.DBName)
+		return reviewMSG
+	}
+
+	return reviewMSG
+}
+
+/* 检测数据库不存在
+Params:
+    _tableInfo: 表相关信息
+ */
+func DetectDatabaseNotExists(_tableInfo *dao.TableInfo) *ReviewMSG {
+	var reviewMSG *ReviewMSG
+
+	// 检测实例中数据库是否存在
+	exists, err := _tableInfo.DatabaseExists()
+	if err != nil {
+		reviewMSG = new(ReviewMSG)
+		reviewMSG.Code = REVIEW_CODE_WARNING
+		reviewMSG.MSG = fmt.Sprintf("警告: 检测目标实例的数据库是否不存在出错. %v", err)
+		return reviewMSG
+	}
+	if !exists {
+		reviewMSG = new(ReviewMSG)
+		reviewMSG.Code = REVIEW_CODE_ERROR
+		reviewMSG.MSG = fmt.Sprintf("检测失败: 目标数据库[%v]不存在.",
+			_tableInfo.DBName)
+		return reviewMSG
+	}
+
+	return reviewMSG
+}
+
+
+/* 检测数据库表是否存在
+Params:
+    _tableInfo: 表相关信息
+ */
+func DetectTableExists(_tableInfo *dao.TableInfo) *ReviewMSG {
+	var reviewMSG *ReviewMSG
+
+	exists, err := _tableInfo.TableExists()
+	if err != nil {
+		reviewMSG = new(ReviewMSG)
+		reviewMSG.Code = REVIEW_CODE_WARNING
+		reviewMSG.MSG = fmt.Sprintf("警告: 检测目标实例的表是否存在出错. %v", err)
+		return reviewMSG
+	}
+	if exists {
+		reviewMSG = new(ReviewMSG)
+		reviewMSG.Code = REVIEW_CODE_ERROR
+		reviewMSG.MSG = fmt.Sprintf("检测失败: 在数据库中表[%v]已经存在.",
+			_tableInfo.TableName)
+		return reviewMSG
+	}
+
+	return reviewMSG
+}
+
+/* 检测数据库表是否不存在
+Params:
+    _tableInfo: 表相关信息
+ */
+func DetectTableNotExists(_tableInfo *dao.TableInfo) *ReviewMSG {
+	var reviewMSG *ReviewMSG
+
+	exists, err := _tableInfo.TableExists()
+	if err != nil {
+		reviewMSG = new(ReviewMSG)
+		reviewMSG.Code = REVIEW_CODE_WARNING
+		reviewMSG.MSG = fmt.Sprintf("警告: 检测目标实例的表是否不存在出错. %v", err)
+		return reviewMSG
+	}
+	if !exists {
+		reviewMSG = new(ReviewMSG)
+		reviewMSG.Code = REVIEW_CODE_ERROR
+		reviewMSG.MSG = fmt.Sprintf("检测失败: 在数据库中表[%v]不存在.",
+			_tableInfo.TableName)
+		return reviewMSG
+	}
+
+	return reviewMSG
+}
+
+/* 检测数据库表是否存在
+Params:
+    _tableInfo: 表相关信息
+    _name: 需要判断的表名
+ */
+func DetectTableExistsByName(_tableInfo *dao.TableInfo, _name string) *ReviewMSG {
+	var reviewMSG *ReviewMSG
+
+	exists, err := _tableInfo.TableExistsByName(_name)
+	if err != nil {
+		reviewMSG = new(ReviewMSG)
+		reviewMSG.Code = REVIEW_CODE_WARNING
+		reviewMSG.MSG = fmt.Sprintf("警告: 检测目标实例的表是否存在出错. %v", err)
+		return reviewMSG
+	}
+	if exists {
+		reviewMSG = new(ReviewMSG)
+		reviewMSG.Code = REVIEW_CODE_ERROR
+		reviewMSG.MSG = fmt.Sprintf("检测失败: 在数据库中表[%v]已经存在.",
+			_tableInfo.TableName)
+		return reviewMSG
+	}
+
+	return reviewMSG
+}
+
+/* 检测数据库表是否不存在
+Params:
+    _tableInfo: 表相关信息
+    _name: 需要判断的表名
+ */
+func DetectTableNotExistsByName(_tableInfo *dao.TableInfo, _name string) *ReviewMSG {
+	var reviewMSG *ReviewMSG
+
+	exists, err := _tableInfo.TableExistsByName(_name)
+	if err != nil {
+		reviewMSG = new(ReviewMSG)
+		reviewMSG.Code = REVIEW_CODE_WARNING
+		reviewMSG.MSG = fmt.Sprintf("警告: 检测目标实例的表是否不存在出错. %v", err)
+		return reviewMSG
+	}
+	if !exists {
+		reviewMSG = new(ReviewMSG)
+		reviewMSG.Code = REVIEW_CODE_ERROR
+		reviewMSG.MSG = fmt.Sprintf("检测失败: 在数据库中表[%v]不存在.",
+			_tableInfo.TableName)
+		return reviewMSG
+	}
+
+	return reviewMSG
 }

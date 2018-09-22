@@ -1,0 +1,379 @@
+package dao
+
+import (
+	"fmt"
+	"github.com/juju/errors"
+	"github.com/daiguadaidai/m-sql-review/config"
+)
+
+type TableInfo struct {
+	DBName string
+	TableName string
+	Instance *Instance
+
+	Exists bool
+	ExistsQueried bool // 已经查询过了 表是否存在
+	DBExists bool
+	DBExistsQueried bool // 已经查询过了 数据库是否存在
+
+	ColumnNameMap map[string]bool
+	PKColumnNameMap map[string]bool
+	PKColumnNameList []string
+	UniqueIndexes map[string][]string
+	Indexes map[string][]string
+}
+
+/* 新建一个表信息
+Params:
+    _instance: 实例
+    _table: 表名
+ */
+func NewTableInfo(_dbConfig *config.DBConfig, _table string) *TableInfo {
+	return &TableInfo{
+		DBName: _dbConfig.Database,
+		TableName: _table,
+		Instance: NewInstance(_dbConfig),
+	}
+}
+
+// 打开实例链接
+func (this *TableInfo) OpenInstance() error {
+	return this.Instance.OpenDB()
+}
+
+// 关闭实例链接
+func (this *TableInfo) CloseInstance() error {
+	return this.Instance.CloseDB()
+}
+
+func (this *TableInfo) DatabaseExists() (bool, error) {
+	if this.DBExistsQueried {
+		return this.DBExists, nil
+	}
+
+	sql := `
+    SELECT COUNT(*)
+    FROM information_schema.SCHEMATA
+    WHERE SCHEMA_NAME = ?;
+    `
+
+	var count int
+	err := this.Instance.DB.QueryRow(sql, this.DBName).Scan(&count)
+	if count > 0 {
+		this.DBExists = true
+	}
+
+	this.DBExistsQueried = true
+
+	return this.DBExists, err
+}
+
+func (this *TableInfo) TableExists() (bool, error) {
+	if this.ExistsQueried {
+		return this.Exists, nil
+	}
+
+	sql := `
+        SELECT COUNT(*)
+        FROM information_schema.TABLES
+        WHERE TABLE_SCHEMA = ?
+            AND TABLE_NAME = ?
+            AND TABLE_TYPE = 'BASE TABLE'
+    `
+
+    var count int
+    err := this.Instance.DB.QueryRow(sql, this.DBName, this.TableName).Scan(&count)
+	if count > 0 {
+		this.Exists = true
+	}
+
+	this.ExistsQueried = true
+
+	return this.Exists, err
+}
+
+//  通过表名确认表是否存在
+func (this *TableInfo) TableExistsByName(_name string) (bool, error) {
+	sql := `
+        SELECT COUNT(*)
+        FROM information_schema.TABLES
+        WHERE TABLE_SCHEMA = ?
+            AND TABLE_NAME = ?
+            AND TABLE_TYPE = 'BASE TABLE'
+    `
+
+	var count int
+	var exists bool
+	err := this.Instance.DB.QueryRow(sql, this.DBName, _name).Scan(&count)
+	if count > 0 {
+		exists = true
+	}
+
+	return exists, err
+}
+
+// 获取表所有字段, 并保存到map中
+func (this *TableInfo) FindColumnNameMap() (map[string]bool, error) {
+	if this.ColumnNameMap != nil { // 存在了就不再次重复查询数据库
+		return this.ColumnNameMap, nil
+	}
+
+	sql := `
+    SELECT COLUMN_NAME
+    FROM information_schema.COLUMNS
+    WHERE TABLE_SCHEMA = ?
+        AND TABLE_NAME = ?;
+    `
+
+    rows, err := this.Instance.DB.Query(sql, this.DBName, this.TableName)
+    if err != nil {
+		errMSG := fmt.Sprintf("获取表所有列出错: %v.%v %v:%v. %v",
+			this.DBName, this.TableName, this.Instance.DBconfig.Host, this.Instance.DBconfig.Port,
+			err)
+		return nil, errors.New(errMSG)
+	}
+	defer rows.Close()
+
+	columnNameMap := make(map[string]bool)
+	var name string
+	for rows.Next() {
+		rows.Scan(&name)
+		columnNameMap[name] = true
+	}
+
+	err = rows.Err()
+	if err != nil {
+		errMSG := fmt.Sprintf("获取表所有列出错(scan): %v.%v %v:%v. %v",
+			this.DBName, this.TableName, this.Instance.DBconfig.Host, this.Instance.DBconfig.Port,
+			err)
+		return nil, errors.New(errMSG)
+	}
+
+	this.ColumnNameMap = make(map[string]bool)
+	this.ColumnNameMap = columnNameMap
+
+	return this.ColumnNameMap, nil
+}
+
+// 获取表的所有索引 已经约束
+func (this *TableInfo) FindAllIndexes() (map[string][]string, error) {
+	// 如果已经有则直接返回, 不必在到数据库中获取
+	if this.Indexes != nil {
+		return this.Indexes, nil
+	}
+
+	// 获取主键
+	_, _, err := this.FindPrimaryKey()
+	if err != nil {
+		return nil, err
+	}
+
+	// 获取唯一键
+	_, err = this.FindUniqueIndexes()
+	if err != nil {
+		return nil, err
+	}
+
+	// 获取索引
+	_, err = this.FindNormalIndexes()
+	if err != nil {
+		return nil, err
+	}
+
+	// 键主键, 都加入到
+	this.PrimaryCombinIndexes()
+	// 唯一键加入 索引
+	this.UniqueIndexCombinIndexes()
+
+	return this.Indexes, nil
+}
+
+// 获取主键
+func (this *TableInfo) FindPrimaryKey() ([]string, map[string]bool, error) {
+	if this.PKColumnNameList != nil && this.PKColumnNameMap != nil {
+		return this.PKColumnNameList, this.PKColumnNameMap, nil
+	}
+
+	sql := `
+        SELECT
+            S.COLUMN_NAME
+        FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS AS TC
+        LEFT JOIN INFORMATION_SCHEMA.STATISTICS AS S
+            ON TC.TABLE_SCHEMA = S.INDEX_SCHEMA
+            AND TC.TABLE_NAME = S.TABLE_NAME
+            AND TC.CONSTRAINT_NAME = S.INDEX_NAME 
+        WHERE TC.TABLE_SCHEMA = ?
+            AND TC.TABLE_NAME = ?
+            AND TC.CONSTRAINT_TYPE = 'PRIMARY KEY'
+        ORDER BY TC.CONSTRAINT_NAME ASC, S.SEQ_IN_INDEX ASC
+    `
+
+	rows, err := this.Instance.DB.Query(sql, this.DBName, this.TableName)
+	if err != nil {
+		errMSG := fmt.Sprintf("获取表主键列名: %v.%v %v:%v. %v",
+			this.DBName, this.TableName, this.Instance.DBconfig.Host, this.Instance.DBconfig.Port,
+			err)
+		return nil, nil, errors.New(errMSG)
+	}
+	defer rows.Close()
+
+
+	pkColumnNameMap := make(map[string]bool)
+	pkColumnNameList := make([]string, 0, 1)
+	var pkColumnName string
+	for rows.Next() {
+		rows.Scan(&pkColumnName)
+		pkColumnNameMap[pkColumnName] = true
+		pkColumnNameList = append(pkColumnNameList, pkColumnName)
+	}
+
+	err = rows.Err()
+	if err != nil {
+		errMSG := fmt.Sprintf("获取表主键列名(scan): %v.%v %v:%v. %v",
+			this.DBName, this.TableName, this.Instance.DBconfig.Host, this.Instance.DBconfig.Port,
+			err)
+		return nil, nil, errors.New(errMSG)
+	}
+
+	this.PKColumnNameMap = pkColumnNameMap
+	this.PKColumnNameList = pkColumnNameList
+
+	return this.PKColumnNameList, this.PKColumnNameMap, nil
+}
+
+// 获取唯一约束据信息
+func (this *TableInfo) FindUniqueIndexes() (map[string][]string, error) {
+	if this.UniqueIndexes != nil {
+		return this.UniqueIndexes, nil
+	}
+
+	sql := `
+        SELECT
+            TC.CONSTRAINT_NAME,
+            S.COLUMN_NAME
+        FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS AS TC
+        LEFT JOIN INFORMATION_SCHEMA.STATISTICS AS S
+            ON TC.TABLE_SCHEMA = S.INDEX_SCHEMA
+            AND TC.TABLE_NAME = S.TABLE_NAME
+            AND TC.CONSTRAINT_NAME = S.INDEX_NAME 
+        WHERE TC.TABLE_SCHEMA = ?
+            AND TC.TABLE_NAME = ?
+            AND TC.CONSTRAINT_TYPE = 'UNIQUE'
+        ORDER BY TC.CONSTRAINT_NAME ASC, S.SEQ_IN_INDEX ASC
+    `
+
+	rows, err := this.Instance.DB.Query(sql, this.DBName, this.TableName)
+	if err != nil {
+		errMSG := fmt.Sprintf("获取唯一键列名: %v.%v %v:%v. %v",
+			this.DBName, this.TableName, this.Instance.DBconfig.Host, this.Instance.DBconfig.Port,
+			err)
+		return nil, errors.New(errMSG)
+	}
+	defer rows.Close()
+
+
+	uniqueIndexes := make(map[string][]string)
+	var uniqueName string
+	var uniqueColumnName string
+	for rows.Next() {
+		rows.Scan(&uniqueName, &uniqueColumnName)
+		if _, ok := uniqueIndexes[uniqueName]; !ok {
+			uniqueIndexes[uniqueName] = make([]string, 0, 1)
+		}
+		uniqueIndexes[uniqueName] = append(uniqueIndexes[uniqueName], uniqueColumnName)
+	}
+
+	err = rows.Err()
+	if err != nil {
+		errMSG := fmt.Sprintf("获取唯一键列名(scan): %v.%v %v:%v. %v",
+			this.DBName, this.TableName, this.Instance.DBconfig.Host, this.Instance.DBconfig.Port,
+			err)
+		return nil, errors.New(errMSG)
+	}
+
+	this.UniqueIndexes = uniqueIndexes
+
+	return this.UniqueIndexes, nil
+}
+
+func (this *TableInfo) FindNormalIndexes() (map[string][]string, error) {
+	if this.Indexes != nil {
+		return this.Indexes, nil
+	}
+
+	sql := fmt.Sprintf("SHOW INDEX FROM `%v`.`%v` WHERE Non_unique = 1",
+		this.DBName, this.TableName)
+
+	rows, err := this.Instance.DB.Query(sql)
+	if err != nil {
+		errMSG := fmt.Sprintf("获取普通索引: %v.%v %v:%v. %v",
+			this.DBName, this.TableName, this.Instance.DBconfig.Host, this.Instance.DBconfig.Port,
+			err)
+		return nil, errors.New(errMSG)
+	}
+	defer rows.Close()
+
+
+	indexes := make(map[string]map[int]string)
+	var ignore interface{}
+	var indexName string
+	var seqInIndex int
+	var indexColumnName string
+	for rows.Next() {
+		rows.Scan(&ignore, &ignore, &indexName, &seqInIndex, &indexColumnName,&ignore,
+			&ignore, &ignore, &ignore, &ignore, &ignore, &ignore, &ignore)
+		if _, ok := indexes[indexName]; !ok {
+			indexes[indexName] = make(map[int]string)
+		}
+
+		indexes[indexName][seqInIndex] = indexColumnName
+	}
+
+	err = rows.Err()
+	if err != nil {
+		errMSG := fmt.Sprintf("获取普通索引(scan): %v.%v %v:%v. %v",
+			this.DBName, this.TableName, this.Instance.DBconfig.Host, this.Instance.DBconfig.Port,
+			err)
+		return nil, errors.New(errMSG)
+	}
+
+	// 将查询主来的转化成想要的格式
+	this.Indexes = make(map[string][]string)
+	for indexName, indexColumnNameMap := range indexes {
+		if _, ok := this.Indexes[indexName]; !ok {
+			this.Indexes[indexName] = make([]string, len(indexColumnNameMap))
+		}
+
+		for seqInIndex, columnName := range indexColumnNameMap {
+			this.Indexes[indexName][seqInIndex - 1] = columnName
+		}
+	}
+
+	return this.Indexes, nil
+}
+
+// 将主键加入索引中
+func (this *TableInfo) PrimaryCombinIndexes() {
+	if this.Indexes == nil {
+		this.Indexes = make(map[string][]string)
+	}
+
+	// 键主键加入索引中
+	if this.PKColumnNameList != nil {
+		this.Indexes["PRIMARY"] = this.PKColumnNameList
+	}
+}
+
+// 将唯一索引加入索引中
+func (this *TableInfo) UniqueIndexCombinIndexes() {
+	if this.Indexes == nil {
+		this.Indexes = make(map[string][]string)
+	}
+
+	// 将唯一索引加入索引中
+	if this.UniqueIndexes != nil {
+		for uniqueName, uniqueIndex := range this.UniqueIndexes {
+			this.Indexes[uniqueName] = uniqueIndex
+		}
+	}
+}

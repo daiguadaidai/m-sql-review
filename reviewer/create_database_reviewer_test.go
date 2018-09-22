@@ -5,11 +5,17 @@ import (
 	"fmt"
 	"github.com/daiguadaidai/m-sql-review/parser"
 	"github.com/daiguadaidai/m-sql-review/config"
+	"github.com/daiguadaidai/m-sql-review/dao"
 )
 
 func TestCreateDatabaseReviewer_Review(t *testing.T) {
+	var host string = "10.10.10.12"
+	var port int = 3306
+	var username string = "HH"
+	var password string = "oracle"
+
 	sql := `
-        CREATE DATABASE IF NOT EXISTS 1$_yourdbname DEFAULT CHARSET utf8 COLLATE gbk_general_ci;
+        CREATE DATABASE IF NOT EXISTS test DEFAULT CHARSET utf8 COLLATE utf8_general_ci;
     `
 
 	sqlParser := parser.New()
@@ -19,10 +25,11 @@ func TestCreateDatabaseReviewer_Review(t *testing.T) {
 	}
 
 	// 循环每一个sql语句进行解析, 并且生成相关审核信息
+	dbConfig := config.NewDBConfig(host, port, username ,password, "")
 	reviewConfig := config.NewReviewConfig()
 	reviewMSGs := make([]*ReviewMSG, 0, 1)
 	for _, stmtNode := range stmtNodes {
-		review := NewReviewer(stmtNode, reviewConfig)
+		review := NewReviewer(stmtNode, reviewConfig, dbConfig)
 		reviewMSG := review.Review()
 		reviewMSGs = append(reviewMSGs, reviewMSG)
 	}

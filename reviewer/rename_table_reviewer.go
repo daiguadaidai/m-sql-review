@@ -4,11 +4,13 @@ import (
 "github.com/daiguadaidai/m-sql-review/ast"
 	"github.com/daiguadaidai/m-sql-review/config"
 	"fmt"
+	"github.com/daiguadaidai/m-sql-review/dao"
 )
 
 type RenameTableReviewer struct {
 	StmtNode *ast.RenameTableStmt
 	ReviewConfig *config.ReviewConfig
+	DBConfig *config.DBConfig
 }
 
 func (this *RenameTableReviewer) Review() *ReviewMSG {
@@ -36,11 +38,13 @@ func (this *RenameTableReviewer) Review() *ReviewMSG {
 		}
 
 		// 检测数据库命名规则
-		reviewMSG = this.DetectDBNameReg(tableToTable.NewTable.Schema.String())
-		if reviewMSG != nil {
-			reviewMSG.MSG = fmt.Sprintf("%v %v", "数据库名", reviewMSG.MSG)
-			reviewMSG.Code = REVIEW_CODE_ERROR
-			return reviewMSG
+		if tableToTable.NewTable.Schema.String() != "" {
+			reviewMSG = this.DetectDBNameReg(tableToTable.NewTable.Schema.String())
+			if reviewMSG != nil {
+				reviewMSG.MSG = fmt.Sprintf("%v %v", "数据库名", reviewMSG.MSG)
+				reviewMSG.Code = REVIEW_CODE_ERROR
+				return reviewMSG
+			}
 		}
 
 		// 检测表名称长度
@@ -58,6 +62,12 @@ func (this *RenameTableReviewer) Review() *ReviewMSG {
 			reviewMSG.Code = REVIEW_CODE_ERROR
 			return reviewMSG
 		}
+	}
+
+	// 链接实例检测表相关信息(所有)
+	reviewMSG = this.DetectInstanceTables()
+	if reviewMSG != nil {
+		return reviewMSG
 	}
 
 	reviewMSG = new(ReviewMSG)
@@ -105,5 +115,61 @@ func (this *RenameTableReviewer) DetectToTableNameReg(_name string) *ReviewMSG {
 			_name)
 	}
 
+	return reviewMSG
+}
+
+// 链接指定实例检测相关表信息(所有)
+func (this *RenameTableReviewer) DetectInstanceTables() *ReviewMSG {
+	var reviewMSG *ReviewMSG
+
+	for _, tableStmt := range this.StmtNode.TableToTables {
+		reviewMSG = this.DetectInstanceTable(tableStmt.OldTable.Name.String(),
+			tableStmt.NewTable.Name.String())
+		if reviewMSG != nil {
+			return reviewMSG
+		}
+	}
+
+	return reviewMSG
+}
+
+/* 链接指定实例检测相关表信息
+Params:
+    _tableName: 原表名
+    _toTablename: 目标表名
+ */
+func (this *RenameTableReviewer) DetectInstanceTable(_tableName string, _toTableName string) *ReviewMSG {
+	var reviewMSG *ReviewMSG
+
+	tableInfo := dao.NewTableInfo(this.DBConfig, _tableName)
+	err := tableInfo.OpenInstance()
+	if err != nil {
+		reviewMSG = new(ReviewMSG)
+		reviewMSG.Code = REVIEW_CODE_WARNING
+		reviewMSG.MSG = fmt.Sprintf("警告: 无法链接到指定实例. 无法删除表[%v]. %v",
+			_tableName, err)
+		return reviewMSG
+	}
+
+
+	// 检测表是否不存在
+	reviewMSG = DetectTableNotExistsByName(tableInfo, _tableName)
+	if reviewMSG != nil {
+		return reviewMSG
+	}
+
+	// 检测目标表是否存在
+	reviewMSG = DetectTableExistsByName(tableInfo, _toTableName)
+	if reviewMSG != nil {
+		return reviewMSG
+	}
+
+	err = tableInfo.CloseInstance()
+	if err != nil {
+		reviewMSG = new(ReviewMSG)
+		reviewMSG.Code = REVIEW_CODE_WARNING
+		reviewMSG.MSG = fmt.Sprintf("警告: 链接实例检测表相关信息. 关闭连接出错. %v", err)
+		return reviewMSG
+	}
 	return reviewMSG
 }

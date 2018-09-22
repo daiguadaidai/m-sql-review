@@ -21,10 +21,10 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/daiguadaidai/m-sql-review/config"
 	"github.com/daiguadaidai/m-sql-review/service"
-	"github.com/outbrain/golib/log"
 )
 
 var runConfig *config.ReviewConfig
+var httpServerConfig *config.HttpServerConfig
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -45,11 +45,7 @@ var rootCmd = &cobra.Command{
         --rule-table-engine="innodb"
     `,
 	Run: func(cmd *cobra.Command, args []string) {
-		err := service.Run(runConfig)
-		if err != nil {
-			log.Errorf("运行失败: %v", err)
-		}
-		fmt.Println(runConfig)
+		service.Run(httpServerConfig, runConfig)
 	},
 }
 
@@ -64,7 +60,18 @@ func Execute() {
 
 func init() {
 	runConfig = new(config.ReviewConfig)
+	httpServerConfig = new(config.HttpServerConfig)
 
+	// 启动服务器的host
+	rootCmd.Flags().StringVar(&httpServerConfig.Host,"listen-host",
+		config.HTTP_SERVER_LISTEN_HOST, "通用名称匹配规则")
+	rootCmd.Flags().IntVar(&httpServerConfig.Port, "listen-port",
+		config.HTTP_SERVER_LISTEN_PORT,"启动服务使用的端口")
+
+
+	/////////////////////////////////////////////////////////////
+	// sql review 规则
+	/////////////////////////////////////////////////////////////
 	rootCmd.Flags().IntVar(&runConfig.RuleNameLength, "rule-name-length",
 		config.RULE_NAME_LENGTH,"通用名称长度")
 	rootCmd.Flags().StringVar(&runConfig.RuleNameReg, "rule-name-reg",
