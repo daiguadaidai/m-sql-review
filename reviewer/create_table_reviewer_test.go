@@ -7,7 +7,6 @@ import (
 	"github.com/daiguadaidai/m-sql-review/config"
 	"github.com/daiguadaidai/m-sql-review/ast"
 	"github.com/daiguadaidai/m-sql-review/dependency/mysql"
-	"github.com/daiguadaidai/m-sql-review/dao"
 )
 
 func TestCreateTableReviewer_Review(t *testing.T) {
@@ -332,7 +331,7 @@ PARTITION BY RANGE(TO_DAYS (uptime1))
 	}
 
 	// 循环每一个sql语句进行解析, 并且生成相关审核信息
-	dbConfig := dao.NewDBConfig(host, port, username ,password, "")
+	dbConfig := config.NewDBConfig(host, port, username ,password, "")
 	reviewConfig := config.NewReviewConfig()
 	reviewMSGs := make([]*ReviewMSG, 0, 1)
 	for _, stmtNode := range stmtNodes {

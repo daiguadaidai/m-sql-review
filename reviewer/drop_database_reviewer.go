@@ -19,7 +19,7 @@ func (this *DropDatabaseReviewer) Review() *ReviewMSG {
 	if !this.ReviewConfig.RuleAllowDropDatabase {
 		reviewMSG = new(ReviewMSG)
 		reviewMSG.Code = REVIEW_CODE_ERROR
-		reviewMSG.MSG = config.MSG_FORBIDEN_DROP_DATABASE_ERROR
+		reviewMSG.MSG = config.MSG_ALLOW_DROP_DATABASE_ERROR
 
 		return reviewMSG
 	}
@@ -51,17 +51,11 @@ func (this *DropDatabaseReviewer) DetectInstanceDatabase() *ReviewMSG {
 		return reviewMSG
 	}
 
-	reviewMSG = DetectDatabaseNotExists(tableInfo)
+	// 数据库不错在报错
+	reviewMSG = DetectDatabaseNotExistsByName(tableInfo, this.StmtNode.Name)
 	if reviewMSG != nil {
 		return reviewMSG
 	}
 
-	err = tableInfo.CloseInstance()
-	if err != nil {
-		reviewMSG = new(ReviewMSG)
-		reviewMSG.Code = REVIEW_CODE_WARNING
-		reviewMSG.MSG = fmt.Sprintf("警告: 链接实例检测数据库相关信息. 关闭连接出错.")
-		return reviewMSG
-	}
-	return reviewMSG
+	return CloseTableInstance(reviewMSG, tableInfo)
 }

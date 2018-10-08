@@ -105,17 +105,11 @@ func (this *CreateDatabaseReviewer) DetectInstanceDatabase() *ReviewMSG {
 		return reviewMSG
 	}
 
-	reviewMSG = DetectDatabaseExists(tableInfo)
+	// 数据库存在报错
+	reviewMSG = DetectDatabaseExistsByName(tableInfo, this.StmtNode.Name)
 	if reviewMSG != nil {
-		return reviewMSG
+		return CloseTableInstance(reviewMSG, tableInfo)
 	}
 
-	err = tableInfo.CloseInstance()
-	if err != nil {
-		reviewMSG = new(ReviewMSG)
-		reviewMSG.Code = REVIEW_CODE_WARNING
-		reviewMSG.MSG = fmt.Sprintf("警告: 链接实例检测数据库相关信息. 关闭连接出错. %v", err)
-		return reviewMSG
-	}
-	return reviewMSG
+	return CloseTableInstance(reviewMSG, tableInfo)
 }

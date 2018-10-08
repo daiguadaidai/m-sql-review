@@ -11,13 +11,13 @@ const (
 	// 通用COLLATE
 	MSG_COLLATE_ERROR = "使用的collate只允许 %v"
 	// 禁用DROP DATABASE 操作
-	MSG_FORBIDEN_DROP_DATABASE_ERROR = "禁止删除数据库"
+	MSG_ALLOW_DROP_DATABASE_ERROR = "禁止删除数据库"
 	// 禁止DROP TABLE操作
-	MSG_FORBIDEN_DROP_TABLE_ERROR = "禁止删除表"
+	MSG_ALLOW_DROP_TABLE_ERROR = "禁止删除表"
 	// 禁止 truncate 表
-	MSG_FORBIDEN_TRUNCATE_TABLE_ERROR = "禁止 truncate 表操作"
+	MSG_ALLOW_TRUNCATE_TABLE_ERROR = "禁止 truncate 表操作"
 	// 禁止 rename 表
-	MSG_FORBIDEN_RENAME_TABLE_ERROR = "禁止 rename 表操作"
+	MSG_ALLOW_RENAME_TABLE_ERROR = "禁止 rename 表操作"
 	// 允许的存储引擎
 	MSG_TABLE_ENGINE_ERROR = "允许的存储引擎 %v"
 	// 重复定义字段名
@@ -60,4 +60,42 @@ const (
 	MSG_NEED_DEFAULT_VALUE_ERROR = "字段定义必须要有默认值"
 	// 必须要有默认值的字段名
 	MSG_NEED_DEFAULT_VALUE_NAME_ERROR = "必须包含默认值的字段名有: %v"
+	// 不否允许删除字段
+	MSG_ALLOW_DROP_COLUMN_ERROR = "不允许删除字段"
+	// 是否允许使用 after 字句
+	MSG_ALLOW_AFTER_CLAUSE_ERROR = "不允许使用after字句"
+	// 是否允许 alter change
+	MSG_ALLOW_CHANGE_COLUMN_ERROR = "不允许 change column 字段"
+	// 是否允许删除索引
+	MSG_ALLOW_DROP_INDEX_ERROR = "不允许删除索引"
+	// 是否允许删除主键
+	MSG_ALLOW_DROP_PRIMARY_KEY_ERROR = "不允许删除主键"
+	// 是否允许重命名索引重命名索引
+	MSG_ALLOW_RENAME_INDEX_ERROR = "不允许重命名索引"
+	// 是否允许删除分区
+	MSG_ALLOW_DROP_PARTITION_ERROR = "不允许删除分区"
+	// 表的索引个数
+	MSG_INDEX_COUNT_ERROR = "索引个数不能超过%v个"
+	// 是否允许DELETE多个表
+	MSG_ALLOW_DELETE_MANY_TABLE_ERROR = "DELETE语句不允许同时删除多个表的数据"
+	// 是否允许DELETE 表关联语句
+	MSG_ALLOW_DELETE_HAS_JOIN_ERROR = "DELETE语句不允许有关联操作"
+	// 是否允许DELETE 使用子句
+	MSG_ALLOW_DELETE_HAS_SUB_CLAUSE_ERROR = "DELETE语句不允许使用子句"
+	// 是否允许DELETE 没有WHERE
+	MSG_ALLOW_DELETE_NO_WHERE_ERROR = "DELETE语句必须有WHERE条件"
+	// 是否允许DELETE limit
+	MSG_ALLOW_DELETE_LIMIT_ERROR = "DELETE语句不允许使用limit"
+	// DELETE 行数限制
+	MSG_DELETE_LESS_THAN_ERROR = "DELETE数据的行数不能超过%v行"
+	// 是否允许 UPDATE 表关联语句
+	MSG_ALLOW_UPDATE_HAS_JOIN_ERROR = "UPDATE语句不允许有关联操作"
+	// 是否允许 UPDATE 使用子句
+	MSG_ALLOW_UPDATE_HAS_SUB_CLAUSE_ERROR = "UPDATE语句不允许使用子句"
+	// 是否允许 UPDATE 没有WHERE
+	MSG_ALLOW_UPDATE_NO_WHERE_ERROR = "UPDATE语句必须有WHERE条件"
+	// 是否允许 UPDATE limit
+	MSG_ALLOW_UPDATE_LIMIT_ERROR = "UPDATE语句不允许使用limit"
+	// UPDATE 行数限制
+	MSG_UPDATE_LESS_THAN_ERROR = "UPDATE数据的行数不能超过%v行"
 )

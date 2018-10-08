@@ -66,6 +66,44 @@ type ReviewConfig struct {
 	RuleNeedDefaultValue bool
 	// 必须有默认值的字段名字
 	RuleNeedDefaultValueName string
+	// 是否允许删除字段
+	RuleAllowDropColumn bool
+	// 是否允许 after 子句
+	RuleAllowAfterClause bool
+	// 是否允许 alter change 语句
+	RuleAllowChangeColumn bool
+	// 是否允许删除索引
+	RuleAllowDropIndex bool
+	// 是否允许删除主键
+	RuleAllowDropPrimaryKey bool
+	// 是否重命名索引
+	RuleAllowRenameIndex bool
+	// 是否允许删除分区
+	RuleAllowDropPartition bool
+	// 表的索引个数
+	RuleIndexCount int
+	// 是否允许DELETE多个表
+	RuleAllowDeleteManyTable bool
+	// 是否允许DELETE 表关联语句
+	RuleAllowDeleteHasJoin bool
+	// 是否允许DELETE 使用子句
+	RuleAllowDeleteHasSubClause bool
+	// 是否允许DELETE 没有WHERE
+	RuleAllowDeleteNoWhere bool
+	// 是否允许 delete 使用 limit
+	RuleAllowDeleteLimit bool
+	// DELETE 行数限制
+	RuleDeleteLessThan int
+	// 是否允许 UPDATE 表关联语句
+	RuleAllowUpdateHasJoin bool
+	// 是否允许 UPDATE 使用子句
+	RuleAllowUpdateHasSubClause bool
+	// 是否允许 UPDATE 没有WHERE
+	RuleAllowUpdateNoWhere bool
+	// 是否允许 UPDATE 使用 limit
+	RuleAllowUpdateLimit bool
+	// UPDATE 行数限制
+	RuleUpdateLessThan int
 }
 
 func NewReviewConfig() *ReviewConfig {
@@ -100,6 +138,25 @@ func NewReviewConfig() *ReviewConfig {
 	rc.RuleHaveColumnName = RULE_HAVE_COLUMN_NAME
 	rc.RuleNeedDefaultValue = RULE_NEED_DEFAULT_VALUE
 	rc.RuleNeedDefaultValueName = RULE_NEED_DEFAULT_VALUE_NAME
+	rc.RuleAllowDropColumn = RULE_ALLOW_DROP_COLUMN
+	rc.RuleAllowAfterClause = RULE_ALLOW_AFTER_CLAUSE
+	rc.RuleAllowChangeColumn = RULE_ALLOW_CHANGE_COLUMN
+	rc.RuleAllowDropPrimaryKey = RULE_ALLOW_DROP_PRIMARY_KEY
+	rc.RuleAllowDropIndex = RULE_ALLOW_DROP_INDEX
+	rc.RuleAllowRenameIndex = RULE_ALLOW_RENAME_INDEX
+	rc.RuleAllowDropPartition = RULE_ALLOW_DROP_PARTITION
+	rc.RuleIndexCount = RULE_INDEX_COUNT
+	rc.RuleAllowDeleteManyTable = RULE_ALLOW_DELETE_MANY_TABLE
+	rc.RuleAllowDeleteHasJoin = RULE_ALLOW_DELETE_HAS_JOIN
+	rc.RuleAllowDeleteHasSubClause = RULE_ALLOW_DELETE_HAS_SUB_CLAUSE
+	rc.RuleAllowDeleteNoWhere = RULE_ALLOW_DELETE_NO_WHERE
+	rc.RuleAllowDeleteLimit = RULE_ALLOW_DELETE_LIMIT
+	rc.RuleDeleteLessThan = RULE_DELETE_LESS_THAN
+	rc.RuleAllowUpdateHasJoin = RULE_ALLOW_UPDATE_HAS_JOIN
+	rc.RuleAllowUpdateHasSubClause = RULE_ALLOW_UPDATE_HAS_SUB_CLAUSE
+	rc.RuleAllowUpdateNoWhere = RULE_ALLOW_UPDATE_NO_WHERE
+	rc.RuleAllowUpdateLimit = RULE_ALLOW_UPDATE_LIMIT
+	rc.RuleUpdateLessThan = RULE_UPDATE_LESS_THAN
 
 	return rc
 }

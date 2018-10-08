@@ -39,7 +39,9 @@ func NewReviewer(
 	case *ast.LoadDataStmt:
 	case *ast.InsertStmt:
 	case *ast.DeleteStmt:
+		return &DeleteReviewer{StmtNode: stmt, ReviewConfig: _reviewConfig, DBConfig: _dbConfig}
 	case *ast.UpdateStmt:
+		return &UpdateReviewer{StmtNode: stmt, ReviewConfig: _reviewConfig, DBConfig: _dbConfig}
 	case *ast.ShowStmt:
 	case *ast.TraceStmt:
 	case *ast.ExplainStmt:
@@ -47,7 +49,7 @@ func NewReviewer(
 	case *ast.DeallocateStmt:
 	case *ast.ExecuteStmt:
 	case *ast.BeginStmt:
-	case *ast.Bindaiguadaidai/m-sql-review/dependencyStmt:
+	case *ast.BinlogStmt:
 	case *ast.CommitStmt:
 	case *ast.RollbackStmt:
 	case *ast.UseStmt:

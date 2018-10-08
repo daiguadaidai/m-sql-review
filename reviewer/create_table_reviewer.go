@@ -32,6 +32,8 @@ type CreateTableReviewer struct {
 	ColumnTypeCount map[byte]int // 保存字段类型出现的个数
 	PartitionColumns []string
 	NeedDefaultValueNameMap map[string]bool // 必须要有默认值的字段名
+
+	SchemaName string
 }
 
 // 初始化一些变量
@@ -46,6 +48,12 @@ func (this *CreateTableReviewer) Init() {
 	this.ColumnTypeCount = make(map[byte]int)
 	this.PartitionColumns = make([]string, 0, 1)
 	this.NeedDefaultValueNameMap = this.ReviewConfig.GetNeedDefaultValueNameMap()
+
+	if this.StmtNode.Table.Schema.String() != "" {
+		this.SchemaName = this.StmtNode.Table.Schema.String()
+	} else {
+		this.SchemaName = this.DBConfig.Database
+	}
 }
 
 func (this *CreateTableReviewer) Review() *ReviewMSG {
@@ -53,19 +61,21 @@ func (this *CreateTableReviewer) Review() *ReviewMSG {
 	var reviewMSG *ReviewMSG
 
 	// 检测数据库名称长度
-	reviewMSG = this.DetectDBNameLength(this.StmtNode.Table.Schema.String())
-	if reviewMSG != nil {
-		reviewMSG.MSG = fmt.Sprintf("%v %v", "数据库名", reviewMSG.MSG)
-		reviewMSG.Code = REVIEW_CODE_ERROR
-		return reviewMSG
-	}
+	if this.StmtNode.Table.Schema.String() != "" {
+		reviewMSG = this.DetectDBNameLength(this.SchemaName)
+		if reviewMSG != nil {
+			reviewMSG.MSG = fmt.Sprintf("%v %v", "数据库名", reviewMSG.MSG)
+			reviewMSG.Code = REVIEW_CODE_ERROR
+			return reviewMSG
+		}
 
-	// 检测数据库命名规则
-	reviewMSG = this.DetectDBNameReg(this.StmtNode.Table.Schema.String())
-	if reviewMSG != nil {
-		reviewMSG.MSG = fmt.Sprintf("%v %v", "数据库名", reviewMSG.MSG)
-		reviewMSG.Code = REVIEW_CODE_ERROR
-		return reviewMSG
+		// 检测数据库命名规则
+		reviewMSG = this.DetectDBNameReg(this.SchemaName)
+		if reviewMSG != nil {
+			reviewMSG.MSG = fmt.Sprintf("%v %v", "数据库名", reviewMSG.MSG)
+			reviewMSG.Code = REVIEW_CODE_ERROR
+			return reviewMSG
+		}
 	}
 
 	// 检测表名称长度
@@ -140,7 +150,7 @@ func (this *CreateTableReviewer) Review() *ReviewMSG {
 		return reviewMSG
 	}
 
-	// 检测Text字段类型使用个数是否超过限制
+	// 检测必须要有索引的字段
 	reviewMSG = this.DetectNeedIndexColumnName()
 	if reviewMSG != nil {
 		reviewMSG.Code = REVIEW_CODE_ERROR
@@ -161,8 +171,22 @@ func (this *CreateTableReviewer) Review() *ReviewMSG {
 		return reviewMSG
 	}
 
+	// 检测重复索引
+	reviewMSG = this.DetectDuplecateIndex()
+	if reviewMSG != nil {
+		reviewMSG.Code = REVIEW_CODE_ERROR
+		return reviewMSG
+	}
+
 	// 检测分区表相关信息
 	reviewMSG = this.DetectPartition()
+	if reviewMSG != nil {
+		reviewMSG.Code = REVIEW_CODE_ERROR
+		return reviewMSG
+	}
+
+	// 检测索引个数是否超过指定数
+	reviewMSG = this.DetectIndexCount()
 	if reviewMSG != nil {
 		reviewMSG.Code = REVIEW_CODE_ERROR
 		return reviewMSG
@@ -173,6 +197,7 @@ func (this *CreateTableReviewer) Review() *ReviewMSG {
 	if reviewMSG != nil {
 		return reviewMSG
 	}
+
 
 	// 能走到这里说明写的语句审核成功
 	reviewMSG = new(ReviewMSG)
@@ -632,7 +657,7 @@ func (this *CreateTableReviewer) DetectColumnOptions() *ReviewMSG {
 				reviewMSG = new(ReviewMSG)
 				reviewMSG.MSG = fmt.Sprintf("检测失败.字段: %v 必须要有默认值. %v. ",
 					column.Name.String(),
-					fmt.Sprintf(config.MSG_NEED_INDEX_COLUMN_NAME_ERROR, this.ReviewConfig.RuleNeedDefaultValueName))
+					fmt.Sprintf(config.MSG_NEED_DEFAULT_VALUE_NAME_ERROR, this.ReviewConfig.RuleNeedDefaultValueName))
 				return reviewMSG
 			}
 		}
@@ -672,8 +697,8 @@ func (this *CreateTableReviewer) DetectNeedIndexColumnName() *ReviewMSG {
 
 		exists := false // 初始化该字段不存在索引
 
-		for _, Index := range this.Indexes { // 只需要检查索引中的第一个字段名就好
-			if needIndexColumnName == strings.ToLower(Index[0]) {
+		for _, index := range this.Indexes { // 只需要检查索引中的第一个字段名就好
+			if needIndexColumnName == strings.ToLower(index[0]) {
 				exists = true
 				break
 			}
@@ -695,7 +720,7 @@ func (this *CreateTableReviewer) DetectNeedIndexColumnName() *ReviewMSG {
 func (this *CreateTableReviewer) DetectHaveColumnName() *ReviewMSG {
 	var reviewMSG *ReviewMSG
 
-	// 循环必须要有索引的字段.
+	// 循环必须要有的字段.
 	for haveColumnName, _ := range this.ReviewConfig.GetHaveColumnNameMap() {
 		// 先判断是否有该字段
 		if _, ok := this.ColumnNames[haveColumnName]; !ok {
@@ -730,6 +755,7 @@ func (this *CreateTableReviewer) DetectNormalIndexHaveUniqueIndex() *ReviewMSG {
 				reviewMSG = new(ReviewMSG)
 				reviewMSG.MSG = fmt.Sprintf("检测失败. 普通索引: %v, 包含了唯一索引: %v 的字段.",
 					normalIndexName, uniqueIndexName)
+				return reviewMSG
 			}
 		}
 	}
@@ -836,17 +862,55 @@ func (this *CreateTableReviewer) DetectInstanceTable() *ReviewMSG {
 	}
 
 	// 检测表是否存在
-	reviewMSG = DetectTableExists(tableInfo)
+	reviewMSG = DetectTableExistsByName(tableInfo, this.SchemaName, this.StmtNode.Table.Name.String())
 	if reviewMSG != nil {
+		return CloseTableInstance(reviewMSG, tableInfo)
+	}
+
+	return CloseTableInstance(reviewMSG, tableInfo)
+}
+
+/* 检测是否有重复索引
+Params:
+    _tableInfo: 原表信息
+ */
+func (this *CreateTableReviewer) DetectDuplecateIndex() *ReviewMSG {
+	var reviewMSG *ReviewMSG
+
+	hashNormalIndex := GetIndexesHashColumn(this.Indexes)
+
+	// 循环 唯一键和 索引进行匹配, 看看唯一索引的字段是否都包含在普通索引中
+	for normalIndexName1, hashNormalIndexStr1 := range hashNormalIndex {
+
+		for normalIndexName2, hashNormalIndexStr2 := range hashNormalIndex {
+			if normalIndexName1 == normalIndexName2 { // 同一个索引不进行比较
+				continue
+			}
+			if isMatch := common.StrIsMatch(hashNormalIndexStr1, hashNormalIndexStr2) ; isMatch {
+				reviewMSG = new(ReviewMSG)
+				reviewMSG.MSG = fmt.Sprintf("检测失败. 检测到重复索引: %v <=> %v.",
+					normalIndexName1, normalIndexName2)
+				return reviewMSG
+			}
+		}
+	}
+
+	return reviewMSG
+}
+
+/* 检测索引个数是否超过指定个数
+Params:
+    _tableInfo: 原表信息
+ */
+func (this *CreateTableReviewer) DetectIndexCount() *ReviewMSG {
+	var reviewMSG *ReviewMSG
+
+	if len(this.Indexes) > this.ReviewConfig.RuleIndexCount {
+		reviewMSG = new(ReviewMSG)
+		reviewMSG.MSG = fmt.Sprintf("检测失败. %v",
+			fmt.Sprintf(config.MSG_INDEX_COUNT_ERROR, this.ReviewConfig.RuleIndexCount))
 		return reviewMSG
 	}
 
-	err = tableInfo.CloseInstance()
-	if err != nil {
-		reviewMSG = new(ReviewMSG)
-		reviewMSG.Code = REVIEW_CODE_WARNING
-		reviewMSG.MSG = fmt.Sprintf("警告: 链接实例检测表相关信息. 关闭连接出错.")
-		return reviewMSG
-	}
 	return reviewMSG
 }

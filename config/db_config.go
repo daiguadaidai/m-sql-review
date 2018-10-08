@@ -53,11 +53,12 @@ func NewDBConfig(
 
 func (this *DBConfig) GetDataSource() string {
 	dataSource := fmt.Sprintf(
-		"%v:%v@tcp(%v:%v)/?charset=%v&allowOldPasswords=%v&timeout=%vs&autocommit=%v&parseTime=True&loc=Local",
+		"%v:%v@tcp(%v:%v)/%v?charset=%v&allowOldPasswords=%v&timeout=%vs&autocommit=%v&parseTime=True&loc=Local",
 		this.Username,
 		this.Password,
 		this.Host,
 		this.Port,
+		this.Database,
 		this.CharSet,
 		this.AllowOldPasswords,
 		this.TimeOut,

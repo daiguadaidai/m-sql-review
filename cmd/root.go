@@ -145,4 +145,58 @@ func init() {
 		fmt.Sprintf("是否需要有默认字段. 默认: %v", config.RULE_NEED_DEFAULT_VALUE))
 	rootCmd.Flags().StringVar(&runConfig.RuleNeedDefaultValueName, "rule-need-default-value-name",
 		config.RULE_NEED_DEFAULT_VALUE_NAME, "必须要有默认值的字段名, 默认(多个用逗号隔开)")
+	rootCmd.Flags().BoolVar(&runConfig.RuleAllowDropColumn, "rule-allow-drop-column",
+		config.RULE_ALLOW_DROP_COLUMN,
+		fmt.Sprintf("是否允许删除字段. 默认: %v", config.RULE_ALLOW_DROP_COLUMN))
+	rootCmd.Flags().BoolVar(&runConfig.RuleAllowAfterClause, "rule-allow-after-clause",
+		config.RULE_ALLOW_AFTER_CLAUSE,
+		fmt.Sprintf("是否允许after子句. 默认: %v", config.RULE_ALLOW_AFTER_CLAUSE))
+	rootCmd.Flags().BoolVar(&runConfig.RuleAllowChangeColumn, "rule-allow-change-column",
+		config.RULE_ALLOW_CHANGE_COLUMN,
+		fmt.Sprintf("是否允许Alter Change子句. 默认: %v", config.RULE_ALLOW_CHANGE_COLUMN))
+	rootCmd.Flags().BoolVar(&runConfig.RuleAllowDropIndex, "rule-allow-drop-index",
+		config.RULE_ALLOW_DROP_INDEX,
+		fmt.Sprintf("是否允许删除索引. 默认: %v", config.RULE_ALLOW_DROP_INDEX))
+	rootCmd.Flags().BoolVar(&runConfig.RuleAllowDropPrimaryKey, "rule-allow-drop-primary-key",
+		config.RULE_ALLOW_DROP_PRIMARY_KEY,
+		fmt.Sprintf("是否允许删除主键. 默认: %v", config.RULE_ALLOW_DROP_PRIMARY_KEY))
+	rootCmd.Flags().BoolVar(&runConfig.RuleAllowRenameIndex, "rule-allow-rename-index",
+		config.RULE_ALLOW_RENAME_INDEX,
+		fmt.Sprintf("是否允许重命名索引. 默认: %v", config.RULE_ALLOW_RENAME_INDEX))
+	rootCmd.Flags().BoolVar(&runConfig.RuleAllowDropPartition, "rule-allow-drop-partition",
+		config.RULE_ALLOW_DROP_PARTITION,
+		fmt.Sprintf("是否允许删除分区. 默认: %v", config.RULE_ALLOW_DROP_PARTITION))
+	rootCmd.Flags().IntVar(&runConfig.RuleIndexCount, "rule-index-count",
+		config.RULE_INDEX_COUNT, "表允许有几个索引")
+	rootCmd.Flags().BoolVar(&runConfig.RuleAllowDeleteManyTable, "rule-allow-delete-many-table",
+		config.RULE_ALLOW_DELETE_MANY_TABLE,
+		fmt.Sprintf("是否允许同时删除多个表数据. 默认: %v", config.RULE_ALLOW_DELETE_MANY_TABLE))
+	rootCmd.Flags().BoolVar(&runConfig.RuleAllowDeleteHasJoin, "rule-allow-delete-has-join",
+		config.RULE_ALLOW_DELETE_HAS_JOIN,
+		fmt.Sprintf("是否允许DELETE语句中使用JOIN. 默认: %v", config.RULE_ALLOW_DELETE_HAS_JOIN))
+	rootCmd.Flags().BoolVar(&runConfig.RuleAllowDeleteHasSubClause, "rule-allow-delete-has-sub-clause",
+		config.RULE_ALLOW_DELETE_HAS_SUB_CLAUSE,
+		fmt.Sprintf("是否允许DELETE语句中使用子查询. 默认: %v", config.RULE_ALLOW_DELETE_HAS_SUB_CLAUSE))
+	rootCmd.Flags().BoolVar(&runConfig.RuleAllowDeleteNoWhere, "rule-allow-delete-no-where",
+		config.RULE_ALLOW_DELETE_NO_WHERE,
+		fmt.Sprintf("是否允许DELETE没有WHERE条件. 默认: %v", config.RULE_ALLOW_DELETE_NO_WHERE))
+	rootCmd.Flags().BoolVar(&runConfig.RuleAllowDeleteLimit, "rule-allow-delete-limit",
+		config.RULE_ALLOW_DELETE_LIMIT,
+		fmt.Sprintf("是否允许DELETE语句使用LIMIT. 默认: %v", config.RULE_ALLOW_DELETE_LIMIT))
+	rootCmd.Flags().IntVar(&runConfig.RuleDeleteLessThan, "rule-delete-less-than",
+		config.RULE_DELETE_LESS_THAN, "允许一次性删除多少行数据. 使用explain计算出来")
+	rootCmd.Flags().BoolVar(&runConfig.RuleAllowUpdateHasJoin, "rule-allow-update-has-join",
+		config.RULE_ALLOW_UPDATE_HAS_JOIN,
+		fmt.Sprintf("是否允许UPDATE语句中使用JOIN. 默认: %v", config.RULE_ALLOW_UPDATE_HAS_JOIN))
+	rootCmd.Flags().BoolVar(&runConfig.RuleAllowUpdateHasSubClause, "rule-allow-update-has-sub-clause",
+		config.RULE_ALLOW_UPDATE_HAS_SUB_CLAUSE,
+		fmt.Sprintf("是否允许UPDATE语句中使用子查询. 默认: %v", config.RULE_ALLOW_UPDATE_HAS_SUB_CLAUSE))
+	rootCmd.Flags().BoolVar(&runConfig.RuleAllowUpdateNoWhere, "rule-allow-update-no-where",
+		config.RULE_ALLOW_UPDATE_NO_WHERE,
+		fmt.Sprintf("是否允许UPDATE没有WHERE条件. 默认: %v", config.RULE_ALLOW_UPDATE_NO_WHERE))
+	rootCmd.Flags().BoolVar(&runConfig.RuleAllowUpdateLimit, "rule-allow-update-limit",
+		config.RULE_ALLOW_UPDATE_LIMIT,
+		fmt.Sprintf("是否允许UPDATE语句使用LIMIT. 默认: %v", config.RULE_ALLOW_UPDATE_LIMIT))
+	rootCmd.Flags().IntVar(&runConfig.RuleUpdateLessThan, "rule-update-less-than",
+		config.RULE_UPDATE_LESS_THAN, "允许一次性删除多少行数据. 使用explain计算出来")
 }

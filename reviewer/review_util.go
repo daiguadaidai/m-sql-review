@@ -2,12 +2,14 @@ package reviewer
 
 import (
 	"fmt"
+	"regexp"
 	"github.com/daiguadaidai/m-sql-review/config"
 	"strings"
 	"strconv"
 	"github.com/dlclark/regexp2"
 	"crypto/md5"
 	"github.com/daiguadaidai/m-sql-review/dao"
+	"github.com/juju/errors"
 )
 
 /* 检测名称长度是否合法
@@ -185,6 +187,30 @@ func GetNoUniqueIndexes(_indexes map[string][]string, _uniqueIndex map[string][]
 	return normalIndexes
 }
 
+/* A/B两个索引进行合并
+Params:
+    _indexesA: 索引A
+    _indexesB: 索引B
+ */
+func CombineIndexes(_indexesA map[string][]string, _indexesB map[string][]string) map[string][]string {
+	indexes := make(map[string][]string)
+
+	for key, columns := range _indexesA {
+		if len(columns) == 0 {
+			continue
+		}
+		indexes[key] = columns
+	}
+	for key, columns := range _indexesB {
+		if len(columns) == 0 {
+			continue
+		}
+		indexes[key] = columns
+	}
+
+	return indexes
+}
+
 /* 将索引的字段转化成 hash过后的值
 Params:
     _indexes: 需要转化的索引
@@ -223,15 +249,16 @@ func GetHashNames(_names []string) []string {
 	return hashIndex
 }
 
-/* 检测数据库是否存在
+/* 数据库存在返回错误
 Params:
-    _tableInfo: 表相关信息
+    _tableInfo: 库相关信息
+    _dbName: 数据库名
  */
-func DetectDatabaseExists(_tableInfo *dao.TableInfo) *ReviewMSG {
+func DetectDatabaseExistsByName(_tableInfo *dao.TableInfo, _dbName string) *ReviewMSG {
 	var reviewMSG *ReviewMSG
 
 	// 检测实例中数据库是否存在
-	exists, err := _tableInfo.DatabaseExists()
+	exists, err := _tableInfo.DatabaseExistsByName(_dbName)
 	if err != nil {
 		reviewMSG = new(ReviewMSG)
 		reviewMSG.Code = REVIEW_CODE_WARNING
@@ -249,25 +276,26 @@ func DetectDatabaseExists(_tableInfo *dao.TableInfo) *ReviewMSG {
 	return reviewMSG
 }
 
-/* 检测数据库不存在
+/* 数据库不存在返回错误
 Params:
-    _tableInfo: 表相关信息
+    _tableInfo: 库相关信息
+    _dbName: 数据库名
  */
-func DetectDatabaseNotExists(_tableInfo *dao.TableInfo) *ReviewMSG {
+func DetectDatabaseNotExistsByName(_tableInfo *dao.TableInfo, _dbName string) *ReviewMSG {
 	var reviewMSG *ReviewMSG
 
 	// 检测实例中数据库是否存在
-	exists, err := _tableInfo.DatabaseExists()
+	exists, err := _tableInfo.DatabaseExistsByName(_dbName)
 	if err != nil {
 		reviewMSG = new(ReviewMSG)
 		reviewMSG.Code = REVIEW_CODE_WARNING
-		reviewMSG.MSG = fmt.Sprintf("警告: 检测目标实例的数据库是否不存在出错. %v", err)
+		reviewMSG.MSG = fmt.Sprintf("警告: 检测目标实例的数据库是否存在出错. %v", err)
 		return reviewMSG
 	}
 	if !exists {
 		reviewMSG = new(ReviewMSG)
 		reviewMSG.Code = REVIEW_CODE_ERROR
-		reviewMSG.MSG = fmt.Sprintf("检测失败: 目标数据库[%v]不存在.",
+		reviewMSG.MSG = fmt.Sprintf("检测失败: 目标数据库[%v]已经存在.",
 			_tableInfo.DBName)
 		return reviewMSG
 	}
@@ -276,14 +304,16 @@ func DetectDatabaseNotExists(_tableInfo *dao.TableInfo) *ReviewMSG {
 }
 
 
-/* 检测数据库表是否存在
+/* 表否存在返回错误
 Params:
     _tableInfo: 表相关信息
+    _dbName: 数据库名
+    _tableName: 需要判断的表名
  */
-func DetectTableExists(_tableInfo *dao.TableInfo) *ReviewMSG {
+func DetectTableExistsByName(_tableInfo *dao.TableInfo, _dbName, _tableName string) *ReviewMSG {
 	var reviewMSG *ReviewMSG
 
-	exists, err := _tableInfo.TableExists()
+	exists, err := _tableInfo.TableExistsByName(_dbName, _tableName)
 	if err != nil {
 		reviewMSG = new(ReviewMSG)
 		reviewMSG.Code = REVIEW_CODE_WARNING
@@ -301,47 +331,23 @@ func DetectTableExists(_tableInfo *dao.TableInfo) *ReviewMSG {
 	return reviewMSG
 }
 
-/* 检测数据库表是否不存在
+/* 表不否存在返回错误
 Params:
     _tableInfo: 表相关信息
+    _dbName: 数据库名
+    _tableName: 需要判断的表名
  */
-func DetectTableNotExists(_tableInfo *dao.TableInfo) *ReviewMSG {
+func DetectTableNotExistsByName(_tableInfo *dao.TableInfo, _dbName, _tableName string) *ReviewMSG {
 	var reviewMSG *ReviewMSG
 
-	exists, err := _tableInfo.TableExists()
-	if err != nil {
-		reviewMSG = new(ReviewMSG)
-		reviewMSG.Code = REVIEW_CODE_WARNING
-		reviewMSG.MSG = fmt.Sprintf("警告: 检测目标实例的表是否不存在出错. %v", err)
-		return reviewMSG
-	}
-	if !exists {
-		reviewMSG = new(ReviewMSG)
-		reviewMSG.Code = REVIEW_CODE_ERROR
-		reviewMSG.MSG = fmt.Sprintf("检测失败: 在数据库中表[%v]不存在.",
-			_tableInfo.TableName)
-		return reviewMSG
-	}
-
-	return reviewMSG
-}
-
-/* 检测数据库表是否存在
-Params:
-    _tableInfo: 表相关信息
-    _name: 需要判断的表名
- */
-func DetectTableExistsByName(_tableInfo *dao.TableInfo, _name string) *ReviewMSG {
-	var reviewMSG *ReviewMSG
-
-	exists, err := _tableInfo.TableExistsByName(_name)
+	exists, err := _tableInfo.TableExistsByName(_dbName, _tableName)
 	if err != nil {
 		reviewMSG = new(ReviewMSG)
 		reviewMSG.Code = REVIEW_CODE_WARNING
 		reviewMSG.MSG = fmt.Sprintf("警告: 检测目标实例的表是否存在出错. %v", err)
 		return reviewMSG
 	}
-	if exists {
+	if !exists {
 		reviewMSG = new(ReviewMSG)
 		reviewMSG.Code = REVIEW_CODE_ERROR
 		reviewMSG.MSG = fmt.Sprintf("检测失败: 在数据库中表[%v]已经存在.",
@@ -352,28 +358,75 @@ func DetectTableExistsByName(_tableInfo *dao.TableInfo, _name string) *ReviewMSG
 	return reviewMSG
 }
 
-/* 检测数据库表是否不存在
+/* 关闭链接并返回相关审核信息
 Params:
-    _tableInfo: 表相关信息
-    _name: 需要判断的表名
+    _reviewMSG: 审核信息
+    _tableInfo: 链接数据库的表
  */
-func DetectTableNotExistsByName(_tableInfo *dao.TableInfo, _name string) *ReviewMSG {
-	var reviewMSG *ReviewMSG
-
-	exists, err := _tableInfo.TableExistsByName(_name)
+func CloseTableInstance(_reviewMSG *ReviewMSG, _tableInfo *dao.TableInfo) *ReviewMSG {
+	err := _tableInfo.CloseInstance()
 	if err != nil {
-		reviewMSG = new(ReviewMSG)
-		reviewMSG.Code = REVIEW_CODE_WARNING
-		reviewMSG.MSG = fmt.Sprintf("警告: 检测目标实例的表是否不存在出错. %v", err)
-		return reviewMSG
-	}
-	if !exists {
-		reviewMSG = new(ReviewMSG)
-		reviewMSG.Code = REVIEW_CODE_ERROR
-		reviewMSG.MSG = fmt.Sprintf("检测失败: 在数据库中表[%v]不存在.",
-			_tableInfo.TableName)
-		return reviewMSG
+		if _reviewMSG == nil {
+			_reviewMSG = new(ReviewMSG)
+		}
+		_reviewMSG.Code = REVIEW_CODE_WARNING
+		_reviewMSG.MSG = fmt.Sprintf("警告: 链接实例检测表相关信息. 关闭连接出错. %v",
+			_reviewMSG.MSG)
 	}
 
-	return reviewMSG
+	return _reviewMSG
+}
+
+/* 将 delete sql 转化称 explain select sql
+Params:
+    _deleteSql: 删除sql
+ */
+func GetExplainSelectSqlByDeleteSql(_deleteSql string) string {
+	var explainSelectSql string
+
+	lowerSql := strings.ToLower(_deleteSql)
+	sqlItems := strings.Split(lowerSql, " from ")
+	explainSelectSql = fmt.Sprintf("%v %v",
+		"explain select * from ", strings.Join(sqlItems[1:], " from "))
+
+	return explainSelectSql
+}
+
+/* 将 update sql 转化称 explain select sql
+Params:
+    _updateSql: 更新sql
+    _setWhereCount: set字句中where关键字的个数
+    _hasWhereClause: 是否有Where 子句
+ */
+func GetExplainSelectSqlByUpdateSql(
+	_updateSql string,
+	_setWhereCount int,
+	_hasWhereClause bool,
+) (string, error) {
+	var explainSelectSql string
+	var explainSelectSuffix string
+	var explainSelectWhere string
+
+	// 通过 set 分开
+	setReg := regexp.MustCompile(`(?i)\sSET\s`)
+	setSplitItems := setReg.Split(_updateSql, 2)
+	if len(setSplitItems) != 2 {
+		errMSG := fmt.Sprintf("多个set关键字, 无法将update语句变成explain select语句")
+		return "", errors.New(errMSG)
+	}
+
+	// 生成 explain select 前缀
+	updateSuffixReg := regexp.MustCompile(`(?i)^\s*UPDATE\s`)
+	explainSelectSuffix = updateSuffixReg.ReplaceAllString(setSplitItems[0], "explain select * from ")
+
+	if _hasWhereClause {
+		// 生成 explain select where 子句
+		whereReg := regexp.MustCompile(`(?i)\sWHERE\s`)
+		whereItems := whereReg.Split(setSplitItems[1], _setWhereCount + 2)
+		explainSelectWhere = whereItems[len(whereItems) - 1]
+	}
+
+	explainSelectSql = fmt.Sprintf("%v where %v", explainSelectSuffix, explainSelectWhere)
+
+	return explainSelectSql, nil
 }

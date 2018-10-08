@@ -16,7 +16,7 @@ const (
 	// 是否允许删除表
 	RULE_ALLOW_DROP_TABLE = false
 	// 是否允许 rename table
-	RULE_ALLOW_RENAME_TABLE = false
+	RULE_ALLOW_RENAME_TABLE = true
 	// 是否允许 truncate table
 	RULE_ALLOW_TRUNCATE_TABLE = false
 	// 建表允许的存储引擎, 多个以逗号隔开
@@ -50,7 +50,7 @@ const (
 	// 必须为 NOT NULL 的字段名
 	RULE_NOT_NULL_COLUMN_NAME = "created_at,updated_at,create_time,update_time,create_at,update_at,created_time,updated_time"
 	// Text 字段类型允许使用个数
-	RULE_TEXT_TYPE_COLUMN_COUNT = 0
+	RULE_TEXT_TYPE_COLUMN_COUNT = 2
 	// 指定字段名必须有索引
 	RULE_NEED_INDEX_COLUMN_NAME = "created_at,updated_at,create_time,update_time,create_at,update_at,created_time,updated_time"
 	// 必须有的字段名
@@ -59,4 +59,42 @@ const (
 	RULE_NEED_DEFAULT_VALUE = false
 	// 必须要有默认值的字段名
 	RULE_NEED_DEFAULT_VALUE_NAME = "created_at,updated_at,create_time,update_time,create_at,update_at,created_time,updated_time"
+	// 是否允许删除字段
+	RULE_ALLOW_DROP_COLUMN = true
+	// 是否允许 after 字句
+	RULE_ALLOW_AFTER_CLAUSE = true
+	// 是否允许 alter change
+	RULE_ALLOW_CHANGE_COLUMN = true
+	// 是否允许删除索引
+	RULE_ALLOW_DROP_INDEX = true
+	// 是否允许删除主键
+	RULE_ALLOW_DROP_PRIMARY_KEY = true
+	// 是否允许重命名索引
+	RULE_ALLOW_RENAME_INDEX = true
+	// 是否允许删除分区
+	RULE_ALLOW_DROP_PARTITION = true
+	// 一个表的索引个数
+	RULE_INDEX_COUNT = 15
+	// 是否允许DELETE多个表
+	RULE_ALLOW_DELETE_MANY_TABLE = false
+	// 是否允许DELETE 表关联语句
+	RULE_ALLOW_DELETE_HAS_JOIN = false
+	// 是否允许DELETE 使用子句
+	RULE_ALLOW_DELETE_HAS_SUB_CLAUSE = false
+	// 是否允许DELETE 没有WHERE
+	RULE_ALLOW_DELETE_NO_WHERE = false
+	// 是否允许DELETE limit
+	RULE_ALLOW_DELETE_LIMIT = false
+	// DELETE 行数限制
+	RULE_DELETE_LESS_THAN = 10000
+	// 是否允许 UPDATE 表关联语句
+	RULE_ALLOW_UPDATE_HAS_JOIN = false
+	// 是否允许 UPDATE 使用子句
+	RULE_ALLOW_UPDATE_HAS_SUB_CLAUSE = false
+	// 是否允许 UPDATE 没有WHERE
+	RULE_ALLOW_UPDATE_NO_WHERE = false
+	// 是否允许 UPDATE limit
+	RULE_ALLOW_UPDATE_LIMIT = false
+	// UPDATE 行数限制
+	RULE_UPDATE_LESS_THAN = 10000
 )

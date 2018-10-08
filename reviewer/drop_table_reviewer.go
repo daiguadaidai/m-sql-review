@@ -19,7 +19,7 @@ func (this *DropTableReviewer) Review() *ReviewMSG {
 	if !this.ReviewConfig.RuleAllowDropTable {
 		reviewMSG = new(ReviewMSG)
 		reviewMSG.Code = REVIEW_CODE_ERROR
-		reviewMSG.MSG = config.MSG_FORBIDEN_DROP_TABLE_ERROR
+		reviewMSG.MSG = config.MSG_ALLOW_DROP_TABLE_ERROR
 
 		return reviewMSG
 	}
@@ -42,7 +42,13 @@ func (this *DropTableReviewer) DetectInstanceTables() *ReviewMSG {
 	var reviewMSG *ReviewMSG
 
 	for _, tableStmt := range this.StmtNode.Tables {
-		reviewMSG = this.DetectInstanceTable(tableStmt.Name.String())
+		var schemaName string
+		if tableStmt.Schema.String() != "" {
+			schemaName = tableStmt.Schema.String()
+		} else {
+			schemaName = this.DBConfig.Database
+		}
+		reviewMSG = this.DetectInstanceTable(schemaName, tableStmt.Name.String())
 		if reviewMSG != nil {
 			return reviewMSG
 		}
@@ -53,9 +59,10 @@ func (this *DropTableReviewer) DetectInstanceTables() *ReviewMSG {
 
 /* 链接指定实例检测相关表信息
 Params:
+    _dbName: 数据库名
     _tableName: 原表名
  */
-func (this *DropTableReviewer) DetectInstanceTable(_tableName string) *ReviewMSG {
+func (this *DropTableReviewer) DetectInstanceTable(_dbName, _tableName string) *ReviewMSG {
 	var reviewMSG *ReviewMSG
 
 	tableInfo := dao.NewTableInfo(this.DBConfig, _tableName)
@@ -69,17 +76,10 @@ func (this *DropTableReviewer) DetectInstanceTable(_tableName string) *ReviewMSG
 	}
 
 	// 检测表是否存在
-	reviewMSG = DetectTableNotExists(tableInfo)
+	reviewMSG = DetectTableNotExistsByName(tableInfo, _dbName, _tableName)
 	if reviewMSG != nil {
-		return reviewMSG
+		return CloseTableInstance(reviewMSG, tableInfo)
 	}
 
-	err = tableInfo.CloseInstance()
-	if err != nil {
-		reviewMSG = new(ReviewMSG)
-		reviewMSG.Code = REVIEW_CODE_WARNING
-		reviewMSG.MSG = fmt.Sprintf("警告: 链接实例检测表相关信息. 关闭连接出错. %v", err)
-		return reviewMSG
-	}
-	return reviewMSG
+	return CloseTableInstance(reviewMSG, tableInfo)
 }

@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/daiguadaidai/m-sql-review/parser"
 	"github.com/daiguadaidai/m-sql-review/config"
-	"github.com/daiguadaidai/m-sql-review/dao"
 )
 
 func TestCreateDatabaseReviewer_Review(t *testing.T) {

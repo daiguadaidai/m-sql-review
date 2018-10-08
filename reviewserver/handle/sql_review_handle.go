@@ -42,6 +42,7 @@ func GetRequestReviewParam(_request *http.Request) (*RequestReviewParam, error) 
 	case "POST":
 		return GetReviewConfigByPost(_request)
 	case "GET":
+		return GetReviewConfigByGet(_request)
 	default:
 		errMSG := fmt.Sprintf("错误请求类型: %v. 值允许使用 GET/POST 请求", _request.Method)
 		return nil, errors.New(errMSG)
