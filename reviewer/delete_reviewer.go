@@ -11,20 +11,20 @@ type DeleteReviewer struct {
 	StmtNode *ast.DeleteStmt
 	ReviewConfig *config.ReviewConfig
 	DBConfig *config.DBConfig
-	visitor *DeleteVisitor
+	Visitor *DeleteVisitor
 }
 
 func (this *DeleteReviewer) Init() {
-	this.visitor = NewDeleteVisitor()
+	this.Visitor = NewDeleteVisitor()
 }
 
 func (this *DeleteReviewer) Review() *ReviewMSG {
 	var reviewMSG *ReviewMSG
 
 	this.Init()
-	this.StmtNode.Accept(this.visitor)
+	this.StmtNode.Accept(this.Visitor)
 
-	// 通过 visitor检测相关值
+	// 通过 Visitor检测相关值
 	reviewMSG = this.DetectWithVisitor()
 	if reviewMSG != nil {
 		reviewMSG.Code = REVIEW_CODE_ERROR
@@ -45,7 +45,7 @@ func (this *DeleteReviewer) Review() *ReviewMSG {
 	return reviewMSG
 }
 
-// 通过 visitor 来检测相关信息
+// 通过 Visitor 来检测相关信息
 func (this *DeleteReviewer) DetectWithVisitor() *ReviewMSG {
 	var reviewMSG *ReviewMSG
 
@@ -85,9 +85,9 @@ func (this *DeleteReviewer) DetectWithVisitor() *ReviewMSG {
 func (this *DeleteReviewer) DetectDeleteManyTable() *ReviewMSG {
 	var reviewMSG *ReviewMSG
 
-	switch len(this.visitor.DeleteTables) {
+	switch len(this.Visitor.DeleteTables) {
 	case 0: // 没有指定删除表的情况 (delete 后面没有写表)
-		if !this.ReviewConfig.RuleAllowDeleteManyTable && len(this.visitor.RefTables) > 1 {
+		if !this.ReviewConfig.RuleAllowDeleteManyTable && len(this.Visitor.RefTables) > 1 {
 			reviewMSG = new(ReviewMSG)
 			reviewMSG.MSG = fmt.Sprintf("检测失败. case 0 %v", config.MSG_ALLOW_DELETE_MANY_TABLE_ERROR)
 			return reviewMSG
@@ -109,7 +109,7 @@ func (this *DeleteReviewer) DetectDeleteHasJoin() *ReviewMSG {
 	var reviewMSG *ReviewMSG
 
 	// 不允许join, 有多个表 ref 代表有join操作
-	if !this.ReviewConfig.RuleAllowDeleteHasJoin && len(this.visitor.RefTables) > 1 {
+	if !this.ReviewConfig.RuleAllowDeleteHasJoin && len(this.Visitor.RefTables) > 1 {
 		reviewMSG = new(ReviewMSG)
 		reviewMSG.MSG = fmt.Sprintf("检测失败. %v", config.MSG_ALLOW_DELETE_HAS_JOIN_ERROR)
 		return reviewMSG
@@ -123,7 +123,7 @@ func (this *DeleteReviewer) DetectDeleteHasSubClause() *ReviewMSG {
 	var reviewMSG *ReviewMSG
 
 	// 不允许有子句
-	if !this.ReviewConfig.RuleAllowDeleteHasSubClause && this.visitor.HasSubClause {
+	if !this.ReviewConfig.RuleAllowDeleteHasSubClause && this.Visitor.HasSubClause {
 		reviewMSG = new(ReviewMSG)
 		reviewMSG.MSG = fmt.Sprintf("检测失败. %v", config.MSG_ALLOW_DELETE_HAS_SUB_CLAUSE_ERROR)
 		return reviewMSG
@@ -137,7 +137,7 @@ func (this *DeleteReviewer) DetectDeleteNoWhere() *ReviewMSG {
 	var reviewMSG *ReviewMSG
 
 	// 不允许没有where条件
-	if !this.ReviewConfig.RuleAllowDeleteNoWhere && !this.visitor.HasWhereClause {
+	if !this.ReviewConfig.RuleAllowDeleteNoWhere && !this.Visitor.HasWhereClause {
 		reviewMSG = new(ReviewMSG)
 		reviewMSG.MSG = fmt.Sprintf("检测失败. %v", config.MSG_ALLOW_DELETE_NO_WHERE_ERROR)
 		return reviewMSG
@@ -151,7 +151,7 @@ func (this *DeleteReviewer) DetectDeleteLimit() *ReviewMSG {
 	var reviewMSG *ReviewMSG
 
 	// 不允许没有where条件
-	if !this.ReviewConfig.RuleAllowDeleteLimit && !this.visitor.HasLimitClause {
+	if !this.ReviewConfig.RuleAllowDeleteLimit && !this.Visitor.HasLimitClause {
 		reviewMSG = new(ReviewMSG)
 		reviewMSG.MSG = fmt.Sprintf("检测失败. %v", config.MSG_ALLOW_DELETE_LIMIT_ERROR)
 		return reviewMSG

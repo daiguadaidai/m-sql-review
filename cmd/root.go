@@ -199,4 +199,18 @@ func init() {
 		fmt.Sprintf("是否允许UPDATE语句使用LIMIT. 默认: %v", config.RULE_ALLOW_UPDATE_LIMIT))
 	rootCmd.Flags().IntVar(&runConfig.RuleUpdateLessThan, "rule-update-less-than",
 		config.RULE_UPDATE_LESS_THAN, "允许一次性删除多少行数据. 使用explain计算出来")
+	rootCmd.Flags().BoolVar(&runConfig.RuleAllowInsertSelect, "rule-allow-insert-select",
+		config.RULE_ALLOW_INSERT_SELECT,
+		fmt.Sprintf("是否允许 INSERT SELECT 语句. 默认: %v", config.RULE_ALLOW_INSERT_SELECT))
+	rootCmd.Flags().IntVar(&runConfig.RuleInsertRows, "rule-insert-rows",
+		config.RULE_INSERT_ROWS, "每批允许 insert 的行数")
+	rootCmd.Flags().BoolVar(&runConfig.RuleAllowInsertNoColumn, "rule-allow-insert-no-column",
+		config.RULE_ALLOW_INSERT_NO_COLUMN,
+		fmt.Sprintf("是否允许 INSERT 不明确指定字段名. 默认: %v", config.RULE_ALLOW_INSERT_NO_COLUMN))
+	rootCmd.Flags().BoolVar(&runConfig.RuleAllowInsertIgnore, "rule-allow-insert-ignore",
+		config.RULE_ALLOW_INSERT_IGNORE,
+		fmt.Sprintf("是否允许 INSERT IGNORE 语句. 默认: %v", config.RULE_ALLOW_INSERT_IGNORE))
+	rootCmd.Flags().BoolVar(&runConfig.RuleAllowInsertReplace, "rule-allow-insert-replace",
+		config.RULE_ALLOW_INSERT_REPLIACE,
+		fmt.Sprintf("是否允许 INSERT REPLACE 语句. 默认: %v", config.RULE_ALLOW_INSERT_REPLIACE))
 }

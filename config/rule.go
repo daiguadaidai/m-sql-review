@@ -97,4 +97,14 @@ const (
 	RULE_ALLOW_UPDATE_LIMIT = false
 	// UPDATE 行数限制
 	RULE_UPDATE_LESS_THAN = 10000
+	// 是否允许insert select
+	RULE_ALLOW_INSERT_SELECT = true
+	// insert每批数量
+	RULE_INSERT_ROWS = 1000
+	// 是否允许不指定字段
+	RULE_ALLOW_INSERT_NO_COLUMN = true
+	// 是否允许 insert ignore
+	RULE_ALLOW_INSERT_IGNORE = true
+	// 是否允许 replace into
+	RULE_ALLOW_INSERT_REPLIACE = true
 )

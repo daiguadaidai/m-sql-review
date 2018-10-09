@@ -38,6 +38,7 @@ func NewReviewer(
 	case *ast.UnionStmt:
 	case *ast.LoadDataStmt:
 	case *ast.InsertStmt:
+		return &InsertReviewer{StmtNode: stmt, ReviewConfig: _reviewConfig, DBConfig: _dbConfig}
 	case *ast.DeleteStmt:
 		return &DeleteReviewer{StmtNode: stmt, ReviewConfig: _reviewConfig, DBConfig: _dbConfig}
 	case *ast.UpdateStmt:

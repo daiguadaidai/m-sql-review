@@ -98,4 +98,14 @@ const (
 	MSG_ALLOW_UPDATE_LIMIT_ERROR = "UPDATE语句不允许使用limit"
 	// UPDATE 行数限制
 	MSG_UPDATE_LESS_THAN_ERROR = "UPDATE数据的行数不能超过%v行"
+	// 是否允许insert select
+	MSG_ALLOW_INSERT_SELECT_ERROR = "不允许使用 insert select 语句"
+	// insert每批数量
+	MSG_INSERT_ROWS_ERROR = "每批 insert 行数超过指定行数: %v"
+	// 是否允许不指定字段
+	MSG_ALLOW_INSERT_NO_COLUMN_ERROR = "insert 必须明确指定字段名"
+	// 是否允许 insert ignore
+	MSG_ALLOW_INSERT_IGNORE_ERROR = "不允许 insert ignore 操作"
+	// 是否允许 replace into
+	MSG_ALLOW_INSERT_REPLIACE_ERROR = "不允许replace into 操作"
 )

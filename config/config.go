@@ -104,6 +104,16 @@ type ReviewConfig struct {
 	RuleAllowUpdateLimit bool
 	// UPDATE 行数限制
 	RuleUpdateLessThan int
+	// 是否允许insert select
+	RuleAllowInsertSelect bool
+	// insert每批数量
+	RuleInsertRows int
+	// 是否允许不指定字段
+	RuleAllowInsertNoColumn bool
+	// 是否允许 insert ignore
+	RuleAllowInsertIgnore bool
+	// 是否允许 replace into
+	RuleAllowInsertReplace bool
 }
 
 func NewReviewConfig() *ReviewConfig {
@@ -157,6 +167,11 @@ func NewReviewConfig() *ReviewConfig {
 	rc.RuleAllowUpdateNoWhere = RULE_ALLOW_UPDATE_NO_WHERE
 	rc.RuleAllowUpdateLimit = RULE_ALLOW_UPDATE_LIMIT
 	rc.RuleUpdateLessThan = RULE_UPDATE_LESS_THAN
+	rc.RuleAllowInsertSelect = RULE_ALLOW_INSERT_SELECT
+	rc.RuleInsertRows = RULE_INSERT_ROWS
+	rc.RuleAllowInsertNoColumn = RULE_ALLOW_INSERT_NO_COLUMN
+	rc.RuleAllowInsertIgnore = RULE_ALLOW_INSERT_IGNORE
+	rc.RuleAllowInsertReplace = RULE_ALLOW_INSERT_REPLIACE
 
 	return rc
 }

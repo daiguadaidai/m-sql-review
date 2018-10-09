@@ -376,6 +376,10 @@ Params:
     _tableName: 表名
  */
 func (this *TableInfo) InitCreateTableSql(_dbName, _tableName string) error {
+	if _dbName == "" {
+		_dbName = this.Instance.DBconfig.Database
+	}
+
 	sql := fmt.Sprintf("SHOW CREATE TABLE `%v`.`%v`", _dbName, _tableName)
 
 	var ignore string
