@@ -3,7 +3,6 @@ package handle
 import (
 	"net/http"
 	"fmt"
-	"github.com/daiguadaidai/m-sql-review/config"
 	"github.com/daiguadaidai/m-sql-review/reviewer"
 	"github.com/daiguadaidai/m-sql-review/parser"
 	"github.com/juju/errors"
@@ -29,7 +28,7 @@ func SqlReviewHandle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Fprintf(w, responseReviewData.ReviewMSGs2Json())
+	fmt.Fprintf(w, responseReviewData.ToJson())
 	return
 }
 
@@ -93,9 +92,8 @@ Return:
 	string: 审核相关信息, 如果成功是成功信息, 如果失败是失败信息
  */
 func StartReview(_requestParam *RequestReviewParam) ([]*reviewer.ReviewMSG, error) {
-	reviewConfig := config.GetReviewConfig() // 获取启动服务器使用的参数
-	_requestParam.ReSetReviewConfig(reviewConfig) // 将自定义参数覆盖启动参数
-	dbConfig := _requestParam.DBConfig // 链接数据库配置
+	reviewConfig := _requestParam.GetReviewConfig() // 获取审核参数
+	dbConfig := _requestParam.GetDBConfig() // 链接数据库配置
 
 	// 循环每一个sql语句进行解析, 并且生成相关审核信息
 	reviewMSGs := make([]*reviewer.ReviewMSG, 0, 1)
@@ -124,10 +122,6 @@ func StartReview(_requestParam *RequestReviewParam) ([]*reviewer.ReviewMSG, erro
 			reviewMSG.Sql = stmtNode.Text()
 		}
 		reviewMSGs = append(reviewMSGs, reviewMSG)
-	}
-
-	for _, reviewMSG := range reviewMSGs {
-		fmt.Printf("Code: %v, MSG: %v \n", reviewMSG.Code, reviewMSG.MSG)
 	}
 
 	// 将审核信息转化为 JSON 字符串

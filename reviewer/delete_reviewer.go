@@ -151,7 +151,7 @@ func (this *DeleteReviewer) DetectDeleteLimit() *ReviewMSG {
 	var reviewMSG *ReviewMSG
 
 	// 不允许没有where条件
-	if !this.ReviewConfig.RuleAllowDeleteLimit && !this.Visitor.HasLimitClause {
+	if !this.ReviewConfig.RuleAllowDeleteLimit && this.Visitor.HasLimitClause {
 		reviewMSG = new(ReviewMSG)
 		reviewMSG.MSG = fmt.Sprintf("检测失败. %v", config.MSG_ALLOW_DELETE_LIMIT_ERROR)
 		return reviewMSG
@@ -186,7 +186,6 @@ func (this *DeleteReviewer) DetectDeleteRowCount(tableInfo *dao.TableInfo) *Revi
 	var reviewMSG *ReviewMSG
 
 	explainSelectSql := GetExplainSelectSqlByDeleteSql(this.StmtNode.Text())
-	fmt.Println(explainSelectSql)
 
 	deleteRowCount, err := tableInfo.GetExplainMaxRows(explainSelectSql)
 	if err != nil {
@@ -195,7 +194,7 @@ func (this *DeleteReviewer) DetectDeleteRowCount(tableInfo *dao.TableInfo) *Revi
 		reviewMSG.Code = REVIEW_CODE_WARNING
 		return reviewMSG
 	}
-	fmt.Println("-----", deleteRowCount)
+
 	if deleteRowCount > this.ReviewConfig.RuleDeleteLessThan {
 		reviewMSG = new(ReviewMSG)
 		reviewMSG.MSG = fmt.Sprintf("检测失败. %v",

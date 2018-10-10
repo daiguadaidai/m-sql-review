@@ -20,7 +20,7 @@ type ResponseReviewData struct {
 }
 
 // 将信息以json 字符串返回
-func (this *ResponseReviewData) ReviewMSGs2Json() string {
+func (this *ResponseReviewData) ToJson() string {
 	responseReviewBytes, err := json.Marshal(this)
 	if err != nil {
 		return this.GetErrorJson(err)

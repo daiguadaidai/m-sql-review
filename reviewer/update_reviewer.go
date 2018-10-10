@@ -165,7 +165,6 @@ func (this *UpdateReviewer) DetectUpdateRowCount(tableInfo *dao.TableInfo) *Revi
 		reviewMSG.Code = REVIEW_CODE_WARNING
 		return reviewMSG
 	}
-	fmt.Println(explainSelectSql)
 
 	updateRowCount, err := tableInfo.GetExplainMaxRows(explainSelectSql)
 	if err != nil {

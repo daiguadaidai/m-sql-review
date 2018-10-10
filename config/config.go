@@ -187,7 +187,7 @@ func SetReviewConfig(_reviewConfig *ReviewConfig) {
 // 获取一个Copy的reviewConfig
 func GetReviewConfig() *ReviewConfig {
 	rc := new(ReviewConfig)
-	common.StructCopy(reviewConfig, rc)
+	common.StructCopy(rc, reviewConfig)
 
 	return rc
 }

@@ -135,11 +135,15 @@ func init() {
 		"decimal, tinyint, smallint, int, float, double, timestamp, bigint, mediumint, date, time, " +
 		"datetime, year, newdate, varchar, bit, json, newdecimal, enum, set, tinyblob, mediumblob, " +
 		"longblob, blob, tinytext, mediumtext, longtext, text, geometry")
+	rootCmd.Flags().StringVar(&runConfig.RuleNotNullColumnName, "rule-not-null-column-name",
+		config.RULE_NOT_NULL_COLUMN_NAME, "必须为not null 的索引名, 默认(多个用逗号隔开)")
 	rootCmd.Flags().IntVar(&runConfig.RuleTextTypeColumnCount, "rule-text-type-column-count",
 		config.RULE_TEXT_TYPE_COLUMN_COUNT, "允许使用text/blob字段个数. 如果在rule-not-allow-column-type相关text字段." +
 		"该参数将不其作用")
 	rootCmd.Flags().StringVar(&runConfig.RuleNeedIndexColumnName, "rule-need-index-column-name",
 		config.RULE_NEED_INDEX_COLUMN_NAME, "必须要有索引的字段名, 默认(多个用逗号隔开)")
+	rootCmd.Flags().StringVar(&runConfig.RuleHaveColumnName, "rule-have-column-name",
+		config.RULE_HAVE_COLUMN_NAME, "必须要的字段, 默认(多个用逗号隔开)")
 	rootCmd.Flags().BoolVar(&runConfig.RuleNeedDefaultValue, "rule-need-default-value",
 		config.RULE_NEED_DEFAULT_VALUE,
 		fmt.Sprintf("是否需要有默认字段. 默认: %v", config.RULE_NEED_DEFAULT_VALUE))

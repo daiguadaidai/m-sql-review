@@ -39,10 +39,10 @@ func NewDBConfig(
 		Host:              _host,
 		Port:              _port,
 		Database:          _database,
-		CharSet:           "utf8,utf8mb4,latin1",
+		CharSet:           "utf8mb4",
 		MaxOpenConns:      1,
 		MaxIdelConns:      1,
-		TimeOut:           60,
+		TimeOut:           300,
 		AllowOldPasswords: 1,
 		AutoCommit:        true,
 	}
@@ -64,5 +64,6 @@ func (this *DBConfig) GetDataSource() string {
 		this.TimeOut,
 		this.AutoCommit,
 	)
+
 	return dataSource
 }

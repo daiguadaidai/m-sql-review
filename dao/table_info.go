@@ -69,6 +69,8 @@ func (this *TableInfo) DatabaseExistsByName(_dbName string) (bool, error) {
     WHERE SCHEMA_NAME = ?;
     `
 
+    fmt.Println(sql)
+
 	var count int
 	err := this.Instance.DB.QueryRow(sql, _dbName).Scan(&count)
 	if count > 0 {
@@ -400,7 +402,7 @@ func (this *TableInfo) GetExplainMaxRows(_sql string) (int, error) {
 	rows, err := this.Instance.DB.Query(_sql)
 	if err != nil {
 		errMSG := fmt.Sprintf("执行explain失败: %v:%v. %v %v",
-			this.Instance.DBconfig.Host, this.Instance.DBconfig.Port, _sql, err)
+		this.Instance.DBconfig.Host, this.Instance.DBconfig.Port, _sql, err)
 		return -1, errors.New(errMSG)
 	}
 	defer rows.Close()
@@ -425,11 +427,14 @@ func (this *TableInfo) GetExplainMaxRows(_sql string) (int, error) {
 	}
 	for rows.Next() {
 		rows.Scan(scanArgs...)
-		rowCount, err := strconv.Atoi(string(values[rowsColumnIndex].([]uint8)))
-		if err != nil {
-			errMSG := fmt.Sprintf("explain rows值转化为数字错误: %v:%v. %v %v",
-				this.Instance.DBconfig.Host, this.Instance.DBconfig.Port, _sql, err)
-			return -1, errors.New(errMSG)
+		var rowCount int
+		if values[rowsColumnIndex] != nil {
+			rowCount, err = strconv.Atoi(string(values[rowsColumnIndex].([]uint8)))
+			if err != nil {
+				errMSG := fmt.Sprintf("explain rows值转化为数字错误: %v:%v. %v %v",
+					this.Instance.DBconfig.Host, this.Instance.DBconfig.Port, _sql, err)
+				return -1, errors.New(errMSG)
+			}
 		}
 		if maxRowCount < rowCount {
 			maxRowCount = rowCount

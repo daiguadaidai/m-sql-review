@@ -224,3 +224,30 @@ add (
 
 }
 
+func TestAlterTableReviewer_Review_Normal(t *testing.T) {
+	var host string = "10.10.10.21"
+	var port int = 3307
+	var username string = "HH"
+	var password string = "oracle12"
+	var database string = "employees"
+	sql := `
+alter table employees add column age1 int not null default 0 comment 'aaaa'
+    `
+	fmt.Sprintf("%v", sql)
+
+	sqlParser := parser.New()
+	stmtNodes, err := sqlParser.Parse(sql, "", "")
+	if err != nil {
+		fmt.Printf("Syntax Error: %v", err)
+	}
+
+	// 循环每一个sql语句进行解析, 并且生成相关审核信息
+	dbConfig := config.NewDBConfig(host, port, username ,password, database)
+	reviewConfig := config.NewReviewConfig()
+	for _, stmtNode := range stmtNodes {
+		review := NewReviewer(stmtNode, reviewConfig, dbConfig)
+		reviewMSG := review.Review()
+		fmt.Printf("Code: %v, MSG: %v\n", reviewMSG.Code, reviewMSG.MSG)
+	}
+
+}
